@@ -1,5 +1,9 @@
 # Thexr
 
+Do this next:
+
+- some way to "enter" a space
+
 To start your Phoenix server:
 
   * Install dependencies with `mix deps.get`

@@ -1,0 +1,40 @@
+<.header>
+  Listing Spaces
+  <:actions>
+    <.link patch={~p"/spaces/new"}>
+      <.button>New Space</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table id="spaces" rows={@spaces} row_click={&JS.navigate(~p"/spaces/#{&1}")}>
+  <:col :let={space} label="Name"><%= space.name %></:col>
+  <:col :let={space} label="Description"><%= space.description %></:col>
+  <:action :let={space}>
+    <div class="sr-only">
+      <.link navigate={~p"/spaces/#{space}"}>Show</.link>
+    </div>
+    <.link patch={~p"/spaces/#{space}/edit"}>Edit</.link>
+  </:action>
+  <:action :let={space}>
+    <.link phx-click={JS.push("delete", value: %{id: space.id})} data-confirm="Are you sure?">
+      Delete
+    </.link>
+  </:action>
+</.table>
+
+<.modal
+  :if={@live_action in [:new, :edit]}
+  id="space-modal"
+  show
+  on_cancel={JS.navigate(~p"/spaces")}
+>
+  <.live_component
+    module={ThexrWeb.SpaceLive.FormComponent}
+    id={@space.id || :new}
+    title={@page_title}
+    action={@live_action}
+    space={@space}
+    navigate={~p"/spaces"}
+  />
+</.modal>

@@ -1,8 +1,11 @@
 # Thexr
 
-Do this next:
+Do this next: 
 
-- some way to "enter" a space
+- allow empty description
+- fix any tests (make it so each change runs tests automatically)
+- some way to "enter" a space (gen static html)
+
 
 To start your Phoenix server:
 

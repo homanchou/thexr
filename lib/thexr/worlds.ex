@@ -51,7 +51,7 @@ defmodule Thexr.Worlds do
   """
   def create_space(attrs \\ %{}) do
     %Space{}
-    |> Space.changeset(attrs)
+    |> Space.create_changeset(attrs)
     |> Repo.insert()
   end
 

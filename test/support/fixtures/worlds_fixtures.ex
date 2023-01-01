@@ -11,6 +11,7 @@ defmodule Thexr.WorldsFixtures do
     {:ok, space} =
       attrs
       |> Enum.into(%{
+        id: Thexr.Utils.random_string(5),
         description: "some description",
         name: "some name"
       })

@@ -59,7 +59,10 @@ config :thexr, ThexrWeb.Endpoint,
       ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",
       ~r"priv/gettext/.*(po)$",
       ~r"lib/thexr_web/(live|views)/.*(ex)$",
-      ~r"lib/thexr_web/templates/.*(eex)$"
+      # ~r"lib/thexr_web/templates/.*(eex)$",
+      # HERE -->
+      ~r"lib/seven_web/components/.*(eex)$",
+      ~r"lib/seven_web/controllers/.*(eex)$"
     ]
   ]
 

@@ -61,8 +61,8 @@ config :thexr, ThexrWeb.Endpoint,
       ~r"lib/thexr_web/(live|views)/.*(ex)$",
       # ~r"lib/thexr_web/templates/.*(eex)$",
       # HERE -->
-      ~r"lib/seven_web/components/.*(eex)$",
-      ~r"lib/seven_web/controllers/.*(eex)$"
+      ~r"lib/thexr_web/components/.*(eex)$",
+      ~r"lib/thexr_web/controllers/.*(eex)$"
     ]
   ]
 

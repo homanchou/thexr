@@ -2,9 +2,8 @@
 
 Do this next: 
 
-- allow empty description
-- fix any tests (make it so each change runs tests automatically)
-- some way to "enter" a space (gen static html)
+- system, or framework to enable rendering a 3d canvas
+- customize esbuild
 
 
 To start your Phoenix server:

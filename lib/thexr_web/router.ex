@@ -18,6 +18,7 @@ defmodule ThexrWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    get "/s/:space_id", SpaceController, :show
     live "/spaces", SpaceLive.Index, :index
     live "/spaces/new", SpaceLive.Index, :new
     live "/spaces/:id/edit", SpaceLive.Index, :edit

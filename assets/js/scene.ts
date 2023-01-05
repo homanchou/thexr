@@ -5,14 +5,15 @@ import { Vector3 } from "@babylonjs/core/Maths/math";
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
+import "@babylonjs/core/Materials/standardMaterial";
 
 export const makeScene = (spaceId: string) => {
   const canvas = document.getElementById(spaceId) as HTMLCanvasElement;
   // initialize babylon scene and engine
-  var engine = new Engine(canvas, true);
-  var scene = new Scene(engine);
+  const engine = new Engine(canvas, true);
+  const scene = new Scene(engine);
 
-  var camera: ArcRotateCamera = new ArcRotateCamera(
+  const camera: ArcRotateCamera = new ArcRotateCamera(
     "Camera",
     Math.PI / 2,
     Math.PI / 2,
@@ -21,7 +22,7 @@ export const makeScene = (spaceId: string) => {
     scene
   );
   camera.attachControl(canvas, true);
-  var light1: HemisphericLight = new HemisphericLight(
+  const light1: HemisphericLight = new HemisphericLight(
     "light1",
     new Vector3(1, 1, 0),
     scene

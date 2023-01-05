@@ -2,6 +2,8 @@
 
 Do this next: 
 
+- draw a box in 3d space ( babylon.js )
+- communicate a change to another connected browser
 - system, or framework to enable rendering a 3d canvas
 - customize esbuild
 

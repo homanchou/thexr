@@ -1,0 +1,18 @@
+{
+  "name": "thexr",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bitecs": "^0.3.38"
+  },
+  "devDependencies": {
+    "@babylonjs/core": "^5.40.1",
+    "@babylonjs/inspector": "^5.40.1"
+  }
+}

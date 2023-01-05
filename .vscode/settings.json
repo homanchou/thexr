@@ -5,7 +5,7 @@
         "*.heex": "phoenix-heex",
         // ...
       },
-      
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
       "[elixir]": {
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "JakeBecker.elixir-ls"
@@ -14,5 +14,15 @@
       "[phoenix-heex]": {
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "JakeBecker.elixir-ls"
+      },
+
+      "[javascript]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+      },
+
+      "[typescript]": {
+        "editor.formatOnSave": true, 
+        "editor.defaultFormatter": "esbenp.prettier-vscode" 
       },
 }

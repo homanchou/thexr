@@ -8,6 +8,7 @@ defmodule ThexrWeb.Router do
     plug :put_root_layout, {ThexrWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug :maybe_assign_member_id
   end
 
   pipeline :api do
@@ -25,6 +26,17 @@ defmodule ThexrWeb.Router do
 
     live "/spaces/:id", SpaceLive.Show, :show
     live "/spaces/:id/show/edit", SpaceLive.Show, :edit
+  end
+
+  defp maybe_assign_member_id(conn, _) do
+    case get_session(conn, :member_id) do
+      nil ->
+        member_id = Thexr.Utils.random_string(5)
+        conn |> put_session(:member_id, member_id) |> assign(:member_id, member_id)
+
+      existing_id ->
+        conn |> assign(:member_id, existing_id)
+    end
   end
 
   # Other scopes may use custom stacks.

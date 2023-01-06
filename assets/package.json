@@ -9,7 +9,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "bitecs": "^0.3.38"
+    "@types/phoenix": "^1.5.4",
+    "bitecs": "^0.3.38",
+    "rxjs": "^7.8.0"
   },
   "devDependencies": {
     "@babylonjs/core": "^5.40.1",

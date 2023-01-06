@@ -2,8 +2,8 @@ defmodule ThexrWeb.SpaceController do
   use ThexrWeb, :controller
 
   def show(conn, %{"space_id" => space_id}) do
-    # The home page is often custom made,
-    # so skip the default app layout.
-    render(conn, :show, space_id: space_id, layout: false)
+    member_id = conn.assigns[:member_id]
+    member_token = Phoenix.Token.sign(conn, "salt", member_id)
+    render(conn, :show, space_id: space_id, member_token: member_token, layout: false)
   end
 end

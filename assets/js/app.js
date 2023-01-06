@@ -23,6 +23,8 @@ import { LiveSocket } from "phoenix_live_view";
 import topbar from "../vendor/topbar";
 
 import { makeScene } from "./scene";
+import { createBroker } from "./broker";
+import { Subject } from "rxjs/internal/Subject";
 
 let csrfToken = document
   .querySelector("meta[name='csrf-token']")
@@ -50,7 +52,11 @@ window.liveSocket = liveSocket;
 window.addEventListener("DOMContentLoaded", (event) => {
   if (document.getElementsByTagName("canvas")) {
     console.log("there is a canvas");
-    makeScene(window.space_id);
+
+    const bus = new Subject();
+
+    makeScene(window.space_id, bus);
+    createBroker(window.space_id, bus);
   } else {
     console.log("no canvas");
   }

@@ -2,10 +2,8 @@ defmodule ThexrWeb.SpaceChannel do
   use ThexrWeb, :channel
 
   @impl true
-  def join("space:" <> space_id, payload, socket) do
-    IO.inspect(socket, label: "socket in space channel")
-    # socket = assign(socket, hi: "bye")
-    {:ok, socket}
+  def join("space:" <> space_id, _payload, socket) do
+    {:ok, assign(socket, space_id: space_id)}
   end
 
   # Channels can be used in a request/response fashion

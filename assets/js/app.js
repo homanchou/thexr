@@ -49,14 +49,14 @@ liveSocket.connect();
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket;
 
-window.addEventListener("DOMContentLoaded", (event) => {
+window.addEventListener("DOMContentLoaded", () => {
   if (document.getElementsByTagName("canvas")) {
     console.log("there is a canvas");
 
     const bus = new Subject();
 
     makeScene(window.space_id, bus);
-    createBroker(window.space_id, bus);
+    createBroker(window.space_id, window.member_id, bus);
   } else {
     console.log("no canvas");
   }

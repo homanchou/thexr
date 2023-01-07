@@ -5,7 +5,11 @@
 import { Socket, Channel } from "phoenix";
 import { Subject } from "rxjs/internal/Subject";
 
-export const createBroker = (space_id: string, bus: Subject<any>) => {
+export const createBroker = (
+  space_id: string,
+  member_id: string,
+  bus: Subject<any>
+) => {
   let socket = new Socket("/socket", {
     params: { token: window["member_token"] },
   });
@@ -69,7 +73,7 @@ export const createBroker = (space_id: string, bus: Subject<any>) => {
     });
 
   bus.subscribe((msg) => {
-    channel.push("person_moved", msg);
+    channel.push("person_moved", { ...msg, member_id: member_id });
   });
 
   channel.on("moved", (payload) => {

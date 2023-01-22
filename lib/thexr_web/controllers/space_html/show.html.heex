@@ -16,10 +16,10 @@
   }
 </style>
 
-<canvas class="spaceCanvas" id={@space_id}></canvas>
-
 <script>
-  window.space_id = "<%= @space_id %>";
-  window.member_token = "<%= @member_token %>";
-  window.member_id = "<%= @member_id %>";
+  window.addEventListener("DOMContentLoaded", () => {
+      
+    window.xrs.init(<%= raw @vars %>)
+   
+  });
 </script>

@@ -5,13 +5,9 @@
 import { Socket, Channel } from "phoenix";
 import { Subject } from "rxjs/internal/Subject";
 
-export const createBroker = (
-  space_id: string,
-  member_id: string,
-  bus: Subject<any>
-) => {
+export const createBroker = (vars: any, bus: Subject<any>) => {
   let socket = new Socket("/socket", {
-    params: { token: window["member_token"] },
+    params: { token: vars.member_token },
   });
 
   // When you connect, you'll often need to authenticate the client.
@@ -62,7 +58,7 @@ export const createBroker = (
   // Now that you are connected, you can join channels with a topic.
   // Let's assume you have a channel with a topic named `room` and the
   // subtopic is its id - in this case 42:
-  let channel = socket.channel("space:" + space_id, {});
+  let channel = socket.channel("space:" + vars.space_id, {});
   channel
     .join()
     .receive("ok", (resp) => {
@@ -73,7 +69,7 @@ export const createBroker = (
     });
 
   bus.subscribe((msg) => {
-    channel.push("person_moved", { ...msg, member_id: member_id });
+    channel.push("person_moved", { ...msg, member_id: vars.member_id });
   });
 
   channel.on("moved", (payload) => {

@@ -22,6 +22,8 @@ import { Socket } from "phoenix";
 import { LiveSocket } from "phoenix_live_view";
 import topbar from "../vendor/topbar";
 
+import { xrs } from "./xrs";
+
 import { makeScene } from "./scene";
 import { createBroker } from "./broker";
 import { Subject } from "rxjs/internal/Subject";
@@ -48,16 +50,4 @@ liveSocket.connect();
 // >> liveSocket.enableLatencySim(1000)  // enabled for duration of browser session
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket;
-
-window.addEventListener("DOMContentLoaded", () => {
-  if (document.getElementsByTagName("canvas")) {
-    console.log("there is a canvas");
-
-    const bus = new Subject();
-
-    makeScene(window.space_id, bus);
-    createBroker(window.space_id, window.member_id, bus);
-  } else {
-    console.log("no canvas");
-  }
-});
+window.xrs = xrs;

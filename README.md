@@ -7,8 +7,7 @@ Do this next:
   - make identity using session
   - use in channel using authentication
 
-- system, or framework to enable rendering a 3d canvas
-- customize esbuild
+- use unique_id as entity_id and add to the scene
 
 
 To start your Phoenix server:

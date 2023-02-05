@@ -1,25 +1,32 @@
-import { Subject } from "rxjs/internal/Subject";
-import { createBroker } from "./broker";
-import { makeScene } from "./scene";
+import { BrokerSystem } from "./systems/broker";
+import { SceneSystem } from "./systems/scene";
 
-export const xrs = {
-  init: (vars: any) => {
-    console.log("do something ehre");
-
-    const canvas = document.createElement("canvas");
-    canvas.id = vars.space_id;
-    canvas.style.width = "100%";
-    canvas.style.height = "100%";
-    canvas.style.zIndex = "1";
-    canvas.style.position = "absolute";
-    canvas.style.touchAction = "none";
-    canvas.style.outline = "none";
-
-    document.body.append(canvas);
-
-    const bus = new Subject();
-
-    makeScene(vars.space_id, bus);
-    createBroker(vars, bus);
-  },
+type Config = {
+  member_id: string;
+  member_token: string;
+  space_id: string;
 };
+
+interface ISystem {
+  name: string;
+  init: (xrs: XRS) => void;
+}
+
+export class XRS {
+  public config: Config;
+  public systems: ISystem[] = [];
+  init(vars: Config) {
+    this.config = vars;
+    this.load_default_systems();
+    this.systems.forEach((sys) => sys.init(this));
+  }
+
+  load_default_systems() {
+    this.add_system(new SceneSystem());
+    this.add_system(new BrokerSystem());
+  }
+
+  add_system(system: ISystem) {
+    this.systems.push(system);
+  }
+}

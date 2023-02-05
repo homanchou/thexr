@@ -10,7 +10,6 @@
   "license": "ISC",
   "dependencies": {
     "@types/phoenix": "^1.5.4",
-    "bitecs": "^0.3.38",
     "rxjs": "^7.8.0"
   },
   "devDependencies": {

@@ -26,6 +26,8 @@ defmodule ThexrWeb.Router do
 
     live "/spaces/:id", SpaceLive.Show, :show
     live "/spaces/:id/show/edit", SpaceLive.Show, :edit
+
+    get "/test", TestController, :index
   end
 
   defp maybe_assign_member_id(conn, _) do

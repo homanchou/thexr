@@ -9,9 +9,8 @@ defmodule ThexrWeb.SpaceChannel do
   # Channels can be used in a request/response fashion
   # by sending replies to requests from the client
   @impl true
-  def handle_in("person_moved", payload, socket) do
-    IO.inspect(socket.assigns, label: "socket assigns")
-    broadcast_from(socket, "moved", payload)
+  def handle_in("ctos", payload, socket) do
+    broadcast_from(socket, "stoc", payload)
     {:noreply, socket}
   end
 

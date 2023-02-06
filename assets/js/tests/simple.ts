@@ -25,42 +25,30 @@ export function tests() {
     },
   });
 
-  xrs.init({ space_id: "abc", member_id: "me", member_token: "..." });
+  xrs.config = { space_id: "abc", member_id: "me", member_token: "..." };
 
-  // //   - set properties to the world (ecs) ->
+  xrs.upsert("me", "pos", "set", [1, 2, 3]);
+  xrs.upsert("me", "pos", "set", [4, 5, 6]);
+  console.log(JSON.stringify(xrs.command_queue));
+  xrs.upsert("me", "tag.1", "set", "hiya");
 
-  // xrs.add_entity("abc", {fly: true, gravity: 0.5});
-  // xrs.add_component("abc", {grabbable: true})
-  // xrs.update_component("abc")
-  // xrs.define_component("fly");
-  // xrs.set_component("abc", "fly", [1, 2, 3]);
+  test("commands should condense", xrs.command_queue.length === 1);
+  test(
+    "commands should override prev component",
+    xrs.command_queue
+      .find((item) => item.eid === "me")
+      ?.cp.find((comp) => comp.path === "pos")?.value[0] === 4
+  );
+  test(
+    "commands should merge new components into entities",
+    xrs.command_queue.find((item) => item.eid === "me")?.cp.length === 2
+  );
 
-  // test("has_component", xrs.has_component("abc", "fly"));
-  // test(
-  //   "prepares a payload for export",
-  //   xrs.pop_export_patch()["abc"]["fly"][0] === 1
-  // );
-  // test("is in entered query", xrs.query_entered("fly").length === 1);
-  // test(
-  //   "is cleared from entered query on next call",
-  //   xrs.query_entered("fly").length === 0
-  // );
-  // test("is in updated query", xrs.query_touched("fly").length === 1);
-  // test(
-  //   "is cleared from updated query on next call",
-  //   xrs.query_touched("fly").length === 0
-  // );
-  // test("is not in exit query", xrs.query_exited("fly").length === 0);
+  xrs.apply_commands_to_store();
+  test("apply commands to store", xrs.store["me"] !== undefined);
+  test("command queue emptied", xrs.command_queue.length === 0);
 
-  // - a payload is staged for export -> to sync with clients (every 50-100ms) -> serialize to json
-
-  //- import properties (other's changed) from external clients (every 5-100ms) -> stash in world -> mark change
-  // will show up in queries for enter, update, exit
-  // will NOT update the payload for export
-
-  //- on each frame, if something changed in the world (TM), process systems pipeline
-  //   - go through each system in order: and process each of: on particular components it is interested in: enters, exits, changes
-  //  - will clear the flags for changed
-
-  // receive external updates,
+  xrs.delete_component("me", "tag");
+  xrs.apply_commands_to_store();
+  test("has component removed", xrs.has_component("me", "tag") === false);
 }

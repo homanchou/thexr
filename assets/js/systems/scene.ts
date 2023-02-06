@@ -8,7 +8,7 @@ import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import "@babylonjs/core/Materials/standardMaterial";
 import { XRS } from "../xrs";
 
-export class SceneSystem {
+export class SystemScene {
   public canvas: HTMLCanvasElement;
   public name: "scene";
   public xrs: XRS;
@@ -16,6 +16,9 @@ export class SceneSystem {
     this.xrs = xrs;
     this.create_canvas();
     this.create_scene();
+    this.xrs.bus.commands_to_process.subscribe((v) => {
+      console.log("scene gets a stab at", v);
+    });
   }
 
   create_canvas() {
@@ -35,6 +38,7 @@ export class SceneSystem {
     // initialize babylon scene and engine
     const engine = new Engine(this.canvas, true);
     const scene = new Scene(engine);
+    this.xrs.scene = scene;
 
     const camera: FreeCamera = new FreeCamera("free", Vector3.Zero(), scene);
     camera.attachControl(this.canvas, true);

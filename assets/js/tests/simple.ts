@@ -2,6 +2,8 @@
  * import this file into app.js
  */
 
+import { Command } from "../condensed_command_queue";
+import { get_command_value } from "../entity_component_store";
 import { XRS } from "../xrs";
 
 function test(msg: string, truthy_expression: any) {
@@ -25,30 +27,67 @@ export function tests() {
     },
   });
 
-  xrs.config = { space_id: "abc", member_id: "me", member_token: "..." };
+  xrs.init({ space_id: "abc", member_id: "me", member_token: "..." });
+  console.log("config", xrs.config);
+  // mock
+  xrs.broker.dispatch_to_remote = (thing: any) => {};
 
-  xrs.upsert("me", "pos", "set", [1, 2, 3]);
-  xrs.upsert("me", "pos", "set", [4, 5, 6]);
+  xrs.upsert("me", "pos", [1, 2, 3]);
+  xrs.upsert("me", "pos", [4, 5, 6]);
   console.log(JSON.stringify(xrs.command_queue));
-  xrs.upsert("me", "tag.1", "set", "hiya");
+  xrs.upsert("me", "tag.1", "hiya");
 
   test("commands should condense", xrs.command_queue.length === 1);
-  test(
-    "commands should override prev component",
-    xrs.command_queue
-      .find((item) => item.eid === "me")
-      ?.cp.find((comp) => comp.path === "pos")?.value[0] === 4
-  );
-  test(
-    "commands should merge new components into entities",
-    xrs.command_queue.find((item) => item.eid === "me")?.cp.length === 2
-  );
+  const c = xrs.command_queue.find((item) => item.eid === "me");
+  if (c === undefined) {
+    test("command not found", c);
+  } else {
+    test(
+      "commands should override prev component",
+      get_command_value(c, "set", "pos")?.[0] === 4
+    );
+    test(
+      "commands should merge new components into entities",
+      get_command_value(c, "set", "tag.1") === "hiya"
+    );
+  }
 
-  xrs.apply_commands_to_store();
+  xrs.tick();
+  console.log("store", JSON.stringify(xrs.store));
+  test(
+    "command can deeply update store",
+    xrs.store["me"]["tag"]["1"] === "hiya"
+  );
+  test(
+    "command path isn't directly stored",
+    xrs.store["me"]["tag.1"] === undefined
+  );
   test("apply commands to store", xrs.store["me"] !== undefined);
   test("command queue emptied", xrs.command_queue.length === 0);
 
+  xrs.delete_component("me", "tag.1");
+  xrs.tick();
+  test("deletes value from path", xrs.store["me"]["tag"]["1"] === undefined);
+  console.log("store", JSON.stringify(xrs.store));
+
   xrs.delete_component("me", "tag");
-  xrs.apply_commands_to_store();
+  xrs.tick();
   test("has component removed", xrs.has_component("me", "tag") === false);
+
+  xrs.delete_entity("me");
+  xrs.tick();
+  test("removes entity", xrs.store["me"] === undefined);
+
+  // create entity with a shape component -> creates a box
+  xrs.upsert("box1", "shape", "box");
+  xrs.tick();
+  test("a box was created in 3d", xrs.scene.getMeshByName("box1") !== null);
+
+  // add component pos to position the box
+  xrs.upsert("box1", "pos", [0, 4, 0]);
+  xrs.tick();
+  // xrs.dispatch_commands_to_local(commands);
+
+  // update component pos to reposition the box
+  // delete the entity, and it should remove the box
 }

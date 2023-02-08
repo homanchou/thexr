@@ -3,32 +3,31 @@
 
 // Bring in Phoenix channels client library:
 import { Socket, Channel } from "phoenix";
-import { CondensedCommandQueue } from "../condensed_command_queue";
-import { Command, XRS } from "../xrs";
+import { Command, CondensedCommandQueue } from "../condensed_command_queue";
+import { XRS } from "../xrs";
 
 const INTERVAL = 1000; // ms
 
 export class SystemBroker {
-  public name: "broker";
+  public name = "broker";
   public xrs: XRS;
   socket: Socket;
   channel: Channel;
-  queued_commands: Command[] = [];
+  out_box = []; // outgoing mail to send to server
+  in_box = []; // incoming mail from server
   timeout;
   last_sync = new Date().getTime();
 
   init(xrs: XRS) {
     this.xrs = xrs;
     this.xrs.broker = this;
-    this.create_channel();
+
+    //this.create_channel();
   }
 
   dispatch_to_remote(new_commands: Command[]) {
     for (let i = 0; i < new_commands.length; i++) {
-      CondensedCommandQueue.upsert_command(
-        this.queued_commands,
-        new_commands[i]
-      );
+      CondensedCommandQueue.upsert_command(this.out_box, new_commands[i]);
     }
     const now = new Date().getTime();
     const ms_since_last_sync = now - this.last_sync;
@@ -52,10 +51,10 @@ export class SystemBroker {
       clearTimeout(this.timeout);
       this.timeout = null;
     }
-    if (this.queued_commands.length > 0) {
-      const batch = [...this.queued_commands];
+    if (this.out_box.length > 0) {
+      const batch = [...this.out_box];
       if (batch.length > 0) {
-        this.queued_commands.length = 0;
+        this.out_box.length = 0;
         this.channel.push("ctos", { batch });
         this.last_sync = new Date().getTime();
         console.log("sending batch", JSON.stringify(batch));
@@ -140,7 +139,7 @@ export class SystemBroker {
     this.channel.on("stoc", (payload: { batch: Command[] }) => {
       console.log("receiving batch", JSON.stringify(payload));
       for (let i = 0; i < payload.batch.length; i++) {
-        this.xrs.import_command(payload.batch[i]);
+        CondensedCommandQueue.upsert_command(this.in_box, payload.batch[i]);
       }
     });
   }

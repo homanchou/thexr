@@ -10,15 +10,13 @@ import { XRS } from "../xrs";
 
 export class SystemScene {
   public canvas: HTMLCanvasElement;
-  public name: "scene";
+  public name = "scene";
   public xrs: XRS;
   init(xrs: XRS) {
     this.xrs = xrs;
+    console.log("inside scene, what is xrs", this.xrs);
     this.create_canvas();
     this.create_scene();
-    this.xrs.bus.commands_to_process.subscribe((v) => {
-      console.log("scene gets a stab at", v);
-    });
   }
 
   create_canvas() {

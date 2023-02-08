@@ -1,44 +1,31 @@
-import { Command, ComponentCommand, ComponentOperations } from "./xrs";
+export type Command = {
+  eid: string;
+  set?: Record<string, any>;
+  del?: Set<string>;
+  ttl?: number;
+};
 
 export class CondensedCommandQueue {
   public static upsert_command(queue: Command[], new_command: Command) {
     const existing_command = queue.find((item) => item.eid === new_command.eid);
     if (existing_command) {
-      for (let i = 0; i < new_command.cp.length; i++) {
-        this.component_upsert(new_command.cp[i], existing_command.cp);
+      if (new_command.set) {
+        for (const [key, value] of Object.entries(new_command.set)) {
+          existing_command.set ||= {};
+          existing_command.set[key] = value;
+        }
+      }
+      if (new_command.del) {
+        existing_command.del ||= new Set<string>();
+        for (const component_name of new_command.del) {
+          existing_command.del.add(component_name);
+        }
+      }
+      if (new_command.ttl) {
+        existing_command.ttl = new_command.ttl;
       }
     } else {
       queue.push(new_command);
-    }
-  }
-
-  //   public static upsert(
-  //     queue: Command[],
-  //     entity_id: string,
-  //     path: string,
-  //     op: ComponentOperations,
-  //     value: any
-  //   ) {
-  //     const cmd = queue.find((item) => item.eid === entity_id);
-  //     if (cmd) {
-  //       this.component_upsert({ path, op, value }, cmd.cp);
-  //     } else {
-  //       queue.push({ eid: entity_id, cp: [{ path, op, value }] });
-  //     }
-  //   }
-
-  public static component_upsert(
-    command: ComponentCommand,
-    existing_commands: ComponentCommand[]
-  ) {
-    const comp_command = existing_commands.find(
-      (comp) => comp.path === command.path
-    );
-    if (comp_command) {
-      comp_command.op = command.op;
-      comp_command.value = command.value;
-    } else {
-      existing_commands.push(command);
     }
   }
 }

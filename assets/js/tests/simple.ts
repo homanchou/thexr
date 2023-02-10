@@ -2,7 +2,6 @@
  * import this file into app.js
  */
 
-import { Command } from "../condensed_command_queue";
 import { get_command_value } from "../entity_component_store";
 import { XRS } from "../xrs";
 
@@ -86,8 +85,19 @@ export function tests() {
   // add component pos to position the box
   xrs.upsert("box1", "pos", [0, 4, 0]);
   xrs.tick();
+  test(
+    "a box was positioned",
+    xrs.scene.getMeshByName("box1")?.position.y === 4
+  );
   // xrs.dispatch_commands_to_local(commands);
 
   // update component pos to reposition the box
+  xrs.upsert("box1", "pos", [0, 1, 0]);
+  xrs.tick();
+  test(
+    "a box was repositioned",
+    xrs.scene.getMeshByName("box1")?.position.y === 1
+  );
+
   // delete the entity, and it should remove the box
 }

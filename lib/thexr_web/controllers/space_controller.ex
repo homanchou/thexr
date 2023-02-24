@@ -3,8 +3,7 @@ defmodule ThexrWeb.SpaceController do
 
   def show(conn, %{"space_id" => space_id}) do
     member_id = conn.assigns[:member_id]
-    member_token = Phoenix.Token.sign(conn, "salt", member_id)
-    vars = Jason.encode!(%{space_id: space_id, member_token: member_token, member_id: member_id})
+    vars = Jason.encode!(%{space_id: space_id, member_id: member_id})
 
     render(conn, :show,
       vars: vars,

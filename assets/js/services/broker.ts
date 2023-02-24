@@ -1,75 +1,31 @@
-// NOTE: The contents of this file will only be executed if
-// you uncomment its entry in "assets/js/app.js".
-
-// Bring in Phoenix channels client library:
 import { Socket, Channel } from "phoenix";
-import { Command, CondensedCommandQueue } from "../condensed_command_queue";
-import { XRS } from "../xrs";
+import { Command, XRS } from "../xrs";
 
-const INTERVAL = 1000; // ms
+const INTERVAL = 100; // ms
 
-export class SystemBroker {
+export class ServiceBroker {
   public name = "broker";
   public xrs: XRS;
   socket: Socket;
   channel: Channel;
-  out_box = []; // outgoing mail to send to server
-  in_box = []; // incoming mail from server
-  timeout;
-  last_sync = new Date().getTime();
 
   init(xrs: XRS) {
     this.xrs = xrs;
-    this.xrs.broker = this;
 
-    //this.create_channel();
+    this.create_channel();
   }
 
-  dispatch_to_remote(new_commands: Command[]) {
-    for (let i = 0; i < new_commands.length; i++) {
-      CondensedCommandQueue.upsert_command(this.out_box, new_commands[i]);
-    }
-    const now = new Date().getTime();
-    const ms_since_last_sync = now - this.last_sync;
-    console.log("ms", ms_since_last_sync);
-    if (ms_since_last_sync < INTERVAL) {
-      if (!this.timeout) {
-        console.log(
-          "setting timeout because",
-          ms_since_last_sync,
-          "> ",
-          INTERVAL
-        );
-        this.timeout = setTimeout(() => {
-          this.dispatch_to_remote([]);
-        }, INTERVAL - ms_since_last_sync);
-      }
-      return;
-    }
-
-    if (this.timeout) {
-      clearTimeout(this.timeout);
-      this.timeout = null;
-    }
-    if (this.out_box.length > 0) {
-      const batch = [...this.out_box];
-      if (batch.length > 0) {
-        this.out_box.length = 0;
-        this.channel.push("ctos", { batch });
-        this.last_sync = new Date().getTime();
-        console.log("sending batch", JSON.stringify(batch));
-        // setTimeout(() => {
-        //   this.locked = false;
-        //   console.log("done sending batch");
-        // }, 1000);
-      }
+  push(command: Command) {
+    if (this.channel) {
+      this.channel.push("ctos", command);
     }
   }
 
   create_channel() {
-    this.socket = new Socket("/socket", {
-      params: { token: this.xrs.config.member_token },
-    });
+    // this.socket = new Socket("/socket", {
+    //   params: { token: this.xrs.config.member_token },
+    // });
+    this.socket = window["liveSocket"];
 
     // When you connect, you'll often need to authenticate the client.
     // For example, imagine you have an authentication plug, `MyAuth`,
@@ -129,18 +85,8 @@ export class SystemBroker {
         console.log("Unable to join", resp);
       });
 
-    // bus.subscribe((msg) => {
-    //   channel.push("person_moved", { ...msg, member_id: this.xrs.config.member_id });
-    // });
-
-    // channel.on("moved", (payload) => {
-    //   console.log("receiving", payload);
-    // });
-    this.channel.on("stoc", (payload: { batch: Command[] }) => {
-      console.log("receiving batch", JSON.stringify(payload));
-      for (let i = 0; i < payload.batch.length; i++) {
-        CondensedCommandQueue.upsert_command(this.in_box, payload.batch[i]);
-      }
+    this.channel.on("stoc", (command) => {
+      this.xrs.handle_command(command);
     });
   }
 }

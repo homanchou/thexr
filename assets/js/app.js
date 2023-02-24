@@ -26,8 +26,12 @@ import { XRS } from "./xrs";
 let csrfToken = document
   .querySelector("meta[name='csrf-token']")
   .getAttribute("content");
+let memberToken = document
+  .querySelector("meta[name='member-token']")
+  .getAttribute("content");
+
 let liveSocket = new LiveSocket("/live", Socket, {
-  params: { _csrf_token: csrfToken },
+  params: { _csrf_token: csrfToken, _member_token: memberToken },
 });
 
 // Show progress bar on live navigation and form submits

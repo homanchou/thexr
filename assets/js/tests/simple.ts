@@ -2,31 +2,49 @@
  * import this file into app.js
  */
 
-import { get_command_value } from "../entity_component_store";
 import { XRS } from "../xrs";
 
-function test(msg: string, truthy_expression: any) {
-  if (truthy_expression) {
-    console.log("PASS - ", msg);
-  } else {
-    console.error("FAIL - ", msg);
-  }
+let current_test_name = "none";
 
-  //   console.assert(truthy_expression, msg);
+function assert(expression) {
+  if (expression) {
+    console.log("PASS - ", current_test_name);
+  } else {
+    console.error("FAIL - ", current_test_name);
+  }
+}
+
+function test(name: string, callback) {
+  current_test_name = name;
+  callback();
 }
 
 export function tests() {
   const xrs = window["xrs"] as XRS;
 
+  let system_was_initialized = false;
+
   // first we should add systems
   xrs.add_system({
     name: "test",
     init: () => {
-      console.log("test system inited");
+      system_was_initialized = true;
+      xrs.services.bus.on_set(["box"]).subscribe((cmd) => {
+        assert(true);
+      });
     },
   });
 
-  xrs.init({ space_id: "abc", member_id: "me", member_token: "..." });
+  test("system was initialized", () => {
+    xrs.init({ space_id: "abc", member_id: "me", member_token: "..." });
+    assert(system_was_initialized == true);
+  });
+
+  test("upsert some data", () => {
+    xrs.send_command({ eid: "423", set: { box: true } });
+  });
+
+  /*
   console.log("config", xrs.config);
   // mock
   xrs.broker.dispatch_to_remote = (thing: any) => {};
@@ -100,4 +118,5 @@ export function tests() {
   );
 
   // delete the entity, and it should remove the box
+  */
 }

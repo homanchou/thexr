@@ -1,6 +1,25 @@
 # Thexr
 
-Make a system - shape
+introduce systems
+
+introduce menu
+
+- remove condense message, probably don't need it (simpler)
+- remove deep set, only allow full update of entities (simpler)
+
+Make a entry system - "I choose to enter" - on click in menu, hide it
+  - create cmd to add member_id as an entity with some default position
+  - and an avatar component
+  
+Make an avatar system - "i'm here"
+  - create a simple object to represent a member
+
+- server detect, user left for more than 5 seconds
+  - emit cmd to delete entity of that member_id
+
+
+  
+
 
 command on component can express: enter, exit, update 
 

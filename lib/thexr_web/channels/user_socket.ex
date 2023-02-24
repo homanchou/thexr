@@ -1,5 +1,7 @@
 defmodule ThexrWeb.UserSocket do
-  use Phoenix.Socket
+  # use Phoenix.Socket
+  use Phoenix.LiveView.Socket
+
   require Logger
   # A Socket handler
   #
@@ -22,7 +24,7 @@ defmodule ThexrWeb.UserSocket do
   # See `Phoenix.Token` documentation for examples in
   # performing token verification on connect.
   @impl true
-  def connect(%{"token" => token}, socket, _connect_info) do
+  def connect(%{"_member_token" => token}, socket, _connect_info) do
     case Phoenix.Token.verify(socket, "salt", token, max_age: 1_209_600) do
       {:ok, member_id} ->
         {:ok, assign(socket, member_id: member_id)}

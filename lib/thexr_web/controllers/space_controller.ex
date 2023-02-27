@@ -7,6 +7,7 @@ defmodule ThexrWeb.SpaceController do
 
     render(conn, :show,
       vars: vars,
+      space_id: space_id,
       layout: false
     )
   end

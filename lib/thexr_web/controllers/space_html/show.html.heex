@@ -18,6 +18,4 @@
   });
 </script>
 
-<div class="border-solid">
-  <%= live_render(@conn, ThexrWeb.SpaceMenu.Index, session: %{"space_id" => @space_id}) %>
-</div>
+<%= live_render(@conn, ThexrWeb.SpaceMenu.Index, session: %{"space_id" => @space_id}) %>

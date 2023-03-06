@@ -1,49 +1,5 @@
 # Thexr
 
-introduce systems
-
-introduce menu
-
-- remove condense message, probably don't need it (simpler)
-- remove deep set, only allow full update of entities (simpler)
-
-Make a entry system - "I choose to enter" - on click in menu, hide it
-  - create cmd to add member_id as an entity with some default position
-  - and an avatar component
-  
-Make an avatar system - "i'm here"
-  - create a simple object to represent a member
-
-- server detect, user left for more than 5 seconds
-  - emit cmd to delete entity of that member_id
-
-
-  
-
-
-command on component can express: enter, exit, update 
-
-most of the time it's update so you can give a command like this payload 99% of the time
-
-["entity_id", "component_name1", "component_value1", "component_name2", "component_value2"]
-
-if there are NO specific commands for the first introduction of a component, the commands need to be idemponent, for example create an entity which already exists is possible in a noisy network with resends etc.
-
-For all other actions, a special delimiter will be used in the array:
-
-["entity_id", "_DEL_", "component1", "component2"] means delete the component
-
-["entity_id", "component_name1", "component_value1", "_DEL_", "componen2" ] updates and deletes can be combined, though it is rare.
-
-this leaves future expansion of other delimitors for other pairs of data
-
-["entity_id", "component_name1", "component_value1", "_FLASH_", key, value]
-
-a delimitor will be used to delete the entity itself
-
-["entity_id", "_TTL_", 0], on the client this should trigger component deletes for each of the existing components on the entity
-
-
 
 
 

@@ -12,12 +12,14 @@ export class ServiceBroker {
   init(xrs: XRS) {
     this.xrs = xrs;
 
-    this.create_channel();
+    // this.create_channel();
   }
 
   push(command: Command) {
     if (this.channel) {
       this.channel.push("ctos", command);
+    } else {
+      console.warn("can't push", command, "channel not connected");
     }
   }
 

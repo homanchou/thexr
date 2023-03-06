@@ -1,6 +1,7 @@
 import { filter } from "rxjs/internal/operators/filter";
 import { map } from "rxjs/internal/operators/map";
 import { Subject } from "rxjs/internal/Subject";
+import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { Command, XRS } from "../xrs";
 
 export type PosRot = {
@@ -12,6 +13,7 @@ export class ServiceBus {
   public xrs: XRS;
   public incoming_commands = new Subject<Command>();
   public head_movement = new Subject<PosRot>();
+  public entered_space = new Subject<boolean>();
 
   public init(xrs: XRS) {
     this.xrs = xrs;

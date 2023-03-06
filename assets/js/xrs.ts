@@ -38,6 +38,10 @@ export class XRS {
     this.systems.forEach((sys) => sys.init(this));
   }
 
+  entered() {
+    this.services.bus.entered_space.next(true);
+  }
+
   send_command(command: Command, send_to_self: boolean = true) {
     this.services.broker.push(command);
     if (send_to_self) {

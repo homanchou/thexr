@@ -14,11 +14,19 @@ export class SystemAvatar {
         this.xrs.send_command(
           {
             eid: this.xrs.config.member_id,
-            set: { avatar: "box", pos, rot },
+            set: { pos, rot },
           },
           false
         );
       });
+
+    this.xrs.services.bus.entered_space.subscribe(() => {
+      this.xrs.services.broker.create_channel();
+      this.xrs.send_command({
+        eid: `${this.xrs.config.member_id}`,
+        set: { avatar_head: "box" },
+      });
+    });
 
     this.xrs.services.bus.on_set(["avatar"]).subscribe((cmd) => {
       console.log("avatar receiving", cmd);

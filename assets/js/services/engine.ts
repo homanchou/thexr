@@ -1,5 +1,8 @@
 import { Engine } from "@babylonjs/core/Engines";
 import { Scene } from "@babylonjs/core/scene";
+import "@babylonjs/core/Debug/debugLayer"; // Augments the scene with the debug methods
+import "@babylonjs/inspector"; // Injects a local ES6 version of the inspector to prevent automatically relying on the none compatible version
+
 import { MeshBuilder } from "@babylonjs/core/Meshes/";
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math";
 import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
@@ -40,7 +43,7 @@ export class ServiceEngine {
     // initialize babylon scene and engine
     const engine = new Engine(this.canvas, true);
     this.scene = new Scene(engine);
-
+    window["scene"] = this.scene;
     this.free_camera = new FreeCamera("free", Vector3.Zero(), this.scene);
     this.free_camera.attachControl(this.canvas, true);
     this.free_camera.inertia = 0;

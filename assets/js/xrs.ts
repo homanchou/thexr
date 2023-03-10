@@ -31,6 +31,10 @@ export class XRS {
     broker: new ServiceBroker(),
   };
 
+  debug() {
+    this.services.engine.scene.debugLayer.show({ embedMode: true });
+  }
+
   init(vars: Config) {
     this.config = vars;
     Object.values(this.services).forEach((service) => service.init(this));

@@ -78,6 +78,43 @@ export class ServiceBroker {
     // Let's assume you have a channel with a topic named `room` and the
     // subtopic is its id - in this case 42:
     this.channel = this.socket.channel("space:" + this.xrs.config.space_id, {});
+
+    this.channel.on("stoc", (command) => {
+      this.xrs.handle_command(command);
+    });
+
+    // phoenix presence messages
+    this.channel.on("presence_state", (payload) => {
+      console.log("presence state", payload);
+      this.xrs.services.bus.presence_state.next(payload);
+    });
+
+    this.channel.on("presence_diff", (payload) => {
+      console.log("presence diff", payload);
+
+      this.xrs.services.bus.presence_diff.next(payload);
+    });
+
+    this.channel.on("server_lost", () => {
+      window.location.href = "/";
+    });
+
+    this.channel.on(
+      "member_moved",
+      (payload: { eid: string; head: { pos: number[]; rot: number[] } }) => {
+        this.xrs.services.bus.member_moved.next(payload);
+      }
+    );
+
+    this.channel.on(
+      "member_locations",
+      (payload: {
+        [member_id: string]: { head: { pos: number[]; rot: number[] } };
+      }) => {
+        this.xrs.services.bus.member_locations.next(payload);
+      }
+    );
+
     this.channel
       .join()
       .receive("ok", (resp) => {
@@ -86,9 +123,5 @@ export class ServiceBroker {
       .receive("error", (resp) => {
         console.log("Unable to join", resp);
       });
-
-    this.channel.on("stoc", (command) => {
-      this.xrs.handle_command(command);
-    });
   }
 }

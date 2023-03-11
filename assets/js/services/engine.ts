@@ -48,6 +48,7 @@ export class ServiceEngine {
     this.free_camera.attachControl(this.canvas, true);
     this.free_camera.inertia = 0;
     this.free_camera.angularSensibility = 500;
+    this.free_camera.minZ = 0.1;
 
     fromBabylonObservable(
       this.free_camera.onViewMatrixChangedObservable

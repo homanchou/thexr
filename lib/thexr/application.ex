@@ -14,6 +14,7 @@ defmodule Thexr.Application do
       Thexr.Repo,
       # Start the PubSub system
       {Phoenix.PubSub, name: Thexr.PubSub},
+      ThexrWeb.Presence,
       # Start Finch
       {Finch, name: Thexr.Finch},
       # Start the Endpoint (http/https)

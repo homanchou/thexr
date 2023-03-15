@@ -12,7 +12,7 @@ type Config = {
 export type Command = {
   eid: string;
   set?: { [component_name: string]: any }; // components to patch
-  del?: []; // component_names
+  del?: string[]; // component_names
   ttl?: number; // a way to expire an entire entity
 };
 
@@ -54,8 +54,39 @@ export class XRS {
   }
 
   handle_command(command: Command) {
-    this.services.store.apply_command(command);
-    this.services.bus.incoming_commands.next(command);
+    if (command.set !== undefined) {
+      for (const [component_name, component_value] of Object.entries(
+        command.set
+      )) {
+        this.services.store.set_component(
+          command.eid,
+          component_name,
+          component_value
+        );
+      }
+      this.services.bus.incoming_commands.next(command);
+      return;
+    }
+    if (command.ttl !== undefined) {
+      console.log("handle command got command.ttl", command);
+      for (const component_name of this.services.store.component_names(
+        command.eid
+      )) {
+        this.handle_command({
+          eid: command.eid,
+          del: this.services.store.component_names(command.eid),
+        });
+        this.services.store.del_entity(command.eid);
+      }
+      return;
+    }
+    if (command.del !== undefined) {
+      for (const component_name of command.del) {
+        this.services.store.del_component(command.eid, component_name);
+      }
+      this.services.bus.incoming_commands.next(command);
+      return;
+    }
   }
 
   add_system(system: ISystem) {

@@ -1,6 +1,7 @@
 defmodule ThexrWeb.SpaceChannel do
   use ThexrWeb, :channel
   alias ThexrWeb.Presence
+  alias ThexrWeb.SpaceServer
 
   @impl true
   def join("space:" <> space_id, _payload, socket) do
@@ -13,14 +14,25 @@ defmodule ThexrWeb.SpaceChannel do
   @impl true
 
   def handle_in("imoved", payload, socket) do
+    SpaceServer.process_event(
+      socket.assigns.space_id,
+      %{
+        "eid" => socket.assigns.member_id,
+        "set" => %{"avatar_pose" => payload}
+      },
+      self()
+    )
+
     # TODO, cache this in ETS, and then broadcast at some desired interval
-    broadcast_from(socket, "member_moved", Map.put(payload, "eid", socket.assigns.member_id))
+
+    # broadcast_from(socket, "stoc", %{eid: socket.assigns.member_id, set: %{avatar_pos: payload}})
     add_location_to_ets(socket, payload)
     {:noreply, socket}
   end
 
   def handle_in("ctos", payload, socket) do
-    broadcast_from(socket, "stoc", payload)
+    # broadcast_from(socket, "stoc", payload)
+    SpaceServer.process_event(socket.assigns.space_id, payload, self())
     {:noreply, socket}
   end
 
@@ -33,15 +45,44 @@ defmodule ThexrWeb.SpaceChannel do
 
     push(socket, "presence_state", Presence.list(socket))
 
-    space_state = ThexrWeb.SpaceServer.state(socket.assigns.space_id)
+    space_state = SpaceServer.state(socket.assigns.space_id)
     socket = assign(socket, :ets_ref, space_state.ets_ref)
-    push(socket, "member_locations", lookup_member_locations(socket))
+    push(socket, "member_poses", lookup_member_poses(socket))
+
+    # test to see if we receive some kind of message when the genserver timesout
+    Process.monitor(Swarm.whereis_name(socket.assigns.space_id))
+
+    # SpaceServer.process_event(
+    #   socket.assigns.space_id,
+    #   %{
+    #     "eid" => socket.assigns.member_id,
+    #     "set" => %{"avatar" => "box"}
+    #   },
+    #   self()
+    # )
+
     {:noreply, socket}
+  end
+
+  # the moniter
+  def handle_info({:DOWN, _, :process, _, msg1, msg2, msg3}) do
+    IO.inspect(msg1, label: "handle down1")
+    IO.inspect(msg2, label: "handle down2")
+    IO.inspect(msg3, label: "handle down3")
   end
 
   @impl true
   def terminate(_reason, socket) do
     # tell the server the channel is disconnected
+    # SpaceServer.process_event(
+    #   socket.assigns.space_id,
+    #   %{
+    #     "eid" => socket.assigns.member_id,
+    #     "ttl" => 0
+    #   },
+    #   self()
+    # )
+
     push(socket, "server_lost", %{})
     {:noreply, socket}
   end
@@ -50,7 +91,7 @@ defmodule ThexrWeb.SpaceChannel do
     :ets.insert(socket.assigns.ets_ref, {socket.assigns.member_id, payload})
   end
 
-  def lookup_member_locations(socket) do
+  def lookup_member_poses(socket) do
     :ets.tab2list(socket.assigns.ets_ref)
     |> Enum.reduce(%{}, fn {member_id, payload}, acc ->
       Map.put(acc, member_id, payload)

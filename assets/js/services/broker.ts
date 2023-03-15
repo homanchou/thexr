@@ -79,20 +79,21 @@ export class ServiceBroker {
     // subtopic is its id - in this case 42:
     this.channel = this.socket.channel("space:" + this.xrs.config.space_id, {});
 
+    // for debugging
+    this.channel.onMessage = (event, payload, _) => {
+      if (!event.startsWith("phx_") && !event.startsWith("chan_")) {
+        console.warn(event, payload);
+      }
+      return payload;
+    };
+
     this.channel.on("stoc", (command) => {
       this.xrs.handle_command(command);
     });
 
-    // phoenix presence messages
     this.channel.on("presence_state", (payload) => {
       console.log("presence state", payload);
       this.xrs.services.bus.presence_state.next(payload);
-    });
-
-    this.channel.on("presence_diff", (payload) => {
-      console.log("presence diff", payload);
-
-      this.xrs.services.bus.presence_diff.next(payload);
     });
 
     this.channel.on("server_lost", () => {
@@ -107,21 +108,19 @@ export class ServiceBroker {
     );
 
     this.channel.on(
-      "member_locations",
+      "member_poses",
       (payload: {
         [member_id: string]: { head: { pos: number[]; rot: number[] } };
       }) => {
-        this.xrs.services.bus.member_locations.next(payload);
+        for (const [member_id, avatar_pose] of Object.entries(payload)) {
+          this.xrs.handle_command({ eid: member_id, set: { avatar_pose } });
+        }
       }
     );
 
     this.channel
       .join()
-      .receive("ok", (resp) => {
-        console.log("Joined successfully", resp);
-      })
-      .receive("error", (resp) => {
-        console.log("Unable to join", resp);
-      });
+      .receive("ok", (resp) => {})
+      .receive("error", (resp) => {});
   }
 }

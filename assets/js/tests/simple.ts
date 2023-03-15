@@ -8,7 +8,6 @@ let current_test_name = "none";
 
 function assert(expression) {
   if (expression) {
-    console.log("PASS - ", current_test_name);
   } else {
     console.error("FAIL - ", current_test_name);
   }
@@ -45,13 +44,13 @@ export function tests() {
   });
 
   /*
-  console.log("config", xrs.config);
+  
   // mock
   xrs.broker.dispatch_to_remote = (thing: any) => {};
 
   xrs.upsert("me", "pos", [1, 2, 3]);
   xrs.upsert("me", "pos", [4, 5, 6]);
-  console.log(JSON.stringify(xrs.command_queue));
+  
   xrs.upsert("me", "tag.1", "hiya");
 
   test("commands should condense", xrs.command_queue.length === 1);
@@ -70,7 +69,7 @@ export function tests() {
   }
 
   xrs.tick();
-  console.log("store", JSON.stringify(xrs.store));
+  
   test(
     "command can deeply update store",
     xrs.store["me"]["tag"]["1"] === "hiya"
@@ -85,7 +84,7 @@ export function tests() {
   xrs.delete_component("me", "tag.1");
   xrs.tick();
   test("deletes value from path", xrs.store["me"]["tag"]["1"] === undefined);
-  console.log("store", JSON.stringify(xrs.store));
+  
 
   xrs.delete_component("me", "tag");
   xrs.tick();

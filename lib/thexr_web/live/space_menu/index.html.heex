@@ -1,4 +1,4 @@
-<%= if !@entered do %>
+<%= if connected?(@socket) && !@entered do %>
   <div class="z-20 fixed p-4 border-2 border-red-600 overflow-x-hidden overflow-y-auto inset-0 h-full flex justify-center items-center">
     <div class="border-2 border-green-500 relative p-4 rounded-md flex-col items-center">
       <div class="text-center text-xl">

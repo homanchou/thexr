@@ -21,7 +21,7 @@ export class ServiceEngine {
 
   init(xrs: XRS) {
     this.xrs = xrs;
-    console.log("inside scene, what is xrs", this.xrs);
+
     this.create_canvas();
     this.create_scene();
   }

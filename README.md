@@ -1,8 +1,14 @@
 # Thexr
 
+- movement is so frequent, it has a special message for imoved, but then it doesn't have the same event source record..., avatar pose is the correct event source [ can be made on the server ]
 
+- event sourcing, be able to replay who came and left
+   - need a proper "entity joined and entity left" message.
+   - presence state and presence diff are for the client, but 
+   - [ can be made on the server with every join and terminate ]
 
-
+- the front end is incapable of saying when user left, so need space channel to do that
+  - if doing that... then don't really need phoenix channels
 
 
 To start your Phoenix server:

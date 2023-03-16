@@ -91,21 +91,20 @@ export class ServiceBroker {
       this.xrs.handle_command(command);
     });
 
-    this.channel.on("presence_state", (payload) => {
-      console.log("presence state", payload);
-      this.xrs.services.bus.presence_state.next(payload);
-    });
+    this.channel.on(
+      "presence_state",
+      (payload: { [member_id: string]: any }) => {
+        for (const member_id of Object.keys(payload)) {
+          if (!this.xrs.services.store.state[member_id]) {
+            this.xrs.handle_command({ eid: member_id, set: { avatar: "box" } });
+          }
+        }
+      }
+    );
 
     this.channel.on("server_lost", () => {
       window.location.href = "/";
     });
-
-    this.channel.on(
-      "member_moved",
-      (payload: { eid: string; head: { pos: number[]; rot: number[] } }) => {
-        this.xrs.services.bus.member_moved.next(payload);
-      }
-    );
 
     this.channel.on(
       "member_poses",

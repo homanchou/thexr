@@ -14,20 +14,6 @@ export class ServiceBus {
   public incoming_commands = new Subject<Command>();
   public head_movement = new Subject<PosRot>();
   public entered_space = new Subject<boolean>();
-  public presence_state = new Subject<{ [member_id: string]: any }>();
-  public presence_diff = new Subject<{
-    joins: { [member_id: string]: any };
-    leaves: { [member_id: string]: any };
-  }>();
-  public member_moved = new Subject<{
-    eid: string;
-    head: { pos: number[]; rot: number[] };
-  }>();
-  public member_poses = new Subject<{
-    [eid: string]: {
-      head: { pos: number[]; rot: number[] };
-    };
-  }>();
 
   public init(xrs: XRS) {
     this.xrs = xrs;

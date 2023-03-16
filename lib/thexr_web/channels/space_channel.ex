@@ -65,10 +65,17 @@ defmodule ThexrWeb.SpaceChannel do
   end
 
   # the moniter
-  def handle_info({:DOWN, _, :process, _, msg1, msg2, msg3}) do
-    IO.inspect(msg1, label: "handle down1")
-    IO.inspect(msg2, label: "handle down2")
-    IO.inspect(msg3, label: "handle down3")
+
+  def handle_info(
+        {:DOWN, _ref, :process, _pid,
+         {:function_clause,
+          [
+            {ThexrWeb.SpaceServer, :handle_info, [:timeout | _], _}
+            | _
+          ]}},
+        _socket
+      ) do
+    IO.inspect("a timeout happened")
   end
 
   @impl true

@@ -12,7 +12,6 @@ defmodule ThexrWeb.SpaceChannel do
   # Channels can be used in a request/response fashion
   # by sending replies to requests from the client
   @impl true
-
   def handle_in("imoved", payload, socket) do
     SpaceServer.process_event(
       socket.assigns.space_id,
@@ -73,9 +72,12 @@ defmodule ThexrWeb.SpaceChannel do
             {ThexrWeb.SpaceServer, :handle_info, [:timeout | _], _}
             | _
           ]}},
-        _socket
+        socket
       ) do
+    push(socket, "server_lost", %{})
+
     IO.inspect("a timeout happened")
+    {:stop, "server_timeout", socket}
   end
 
   @impl true

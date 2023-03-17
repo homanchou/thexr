@@ -1,7 +1,7 @@
 defmodule ThexrWeb.SpaceServer do
   use GenServer, restart: :transient
 
-  @timeout :timer.minutes(5)
+  @timeout :timer.minutes(10)
 
   def start_link(space_id) do
     GenServer.start_link(__MODULE__, space_id)

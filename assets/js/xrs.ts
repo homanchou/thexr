@@ -1,8 +1,12 @@
+/* services */
 import { ServiceBroker } from "./services/broker";
 import { ServiceEngine } from "./services/engine";
 import { ServiceStore } from "./services/store";
 import { ServiceBus } from "./services/bus";
+
+/* systems */
 import { SystemAvatar } from "./systems/avatar";
+import { SystemShape } from "./systems/shape";
 
 type Config = {
   member_id: string;
@@ -39,6 +43,7 @@ export class XRS {
     this.config = vars;
     Object.values(this.services).forEach((service) => service.init(this));
     this.add_system(new SystemAvatar());
+    this.add_system(new SystemShape());
     this.systems.forEach((sys) => sys.init(this));
   }
 

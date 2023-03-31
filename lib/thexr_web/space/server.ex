@@ -1,18 +1,24 @@
-defmodule ThexrWeb.SpaceServer do
+defmodule ThexrWeb.Space.Server do
   use GenServer, restart: :transient
 
   @timeout :timer.minutes(10)
 
+  import Thexr.Registry, only: [via_tuple: 2]
+
   def start_link(space_id) do
-    GenServer.start_link(__MODULE__, space_id)
+    GenServer.start_link(__MODULE__, space_id, name: via_tuple(:server, space_id))
   end
 
   def state(space_id) do
-    GenServer.call({:via, :swarm, space_id}, :get_state)
+    GenServer.call(via_tuple(:server, space_id), :get_state)
+  end
+
+  def process_event(server_pid, event, channel_pid) when is_pid(server_pid) do
+    GenServer.cast(server_pid, {:process_event, event, channel_pid})
   end
 
   def process_event(space_id, event, channel_pid) do
-    GenServer.cast({:via, :swarm, space_id}, {:process_event, event, channel_pid})
+    GenServer.cast(via_tuple(:server, space_id), {:process_event, event, channel_pid})
   end
 
   #################################################################
@@ -20,7 +26,6 @@ defmodule ThexrWeb.SpaceServer do
   #################################################################
 
   def init(space_id) do
-    send(self(), :after_init)
     {:ok, %{space_id: space_id}}
   end
 
@@ -41,19 +46,5 @@ defmodule ThexrWeb.SpaceServer do
 
   def handle_call(:get_state, _from, state) do
     {:reply, state, state, @timeout}
-  end
-
-  def handle_info(:after_init, state) do
-    ets_ref =
-      :ets.new(:member_movements, [
-        :set,
-        :public,
-        {:write_concurrency, true},
-        {:read_concurrency, true}
-      ])
-
-    state = Map.put(state, :ets_ref, ets_ref)
-
-    {:noreply, state, @timeout}
   end
 end

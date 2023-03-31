@@ -11,8 +11,6 @@ export class ServiceBroker {
 
   init(xrs: XRS) {
     this.xrs = xrs;
-
-    // this.create_channel();
   }
 
   push(command: Command) {

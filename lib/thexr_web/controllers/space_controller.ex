@@ -5,7 +5,7 @@ defmodule ThexrWeb.SpaceController do
     member_id = conn.assigns[:member_id]
     vars = Jason.encode!(%{space_id: space_id, member_id: member_id})
 
-    Swarm.register_name(space_id, ThexrWeb.SpaceServer, :start_link, [space_id])
+    # Swarm.register_name(space_id, ThexrWeb.SpaceServer, :start_link, [space_id])
 
     render(conn, :show,
       vars: vars,

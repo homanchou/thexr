@@ -74,6 +74,14 @@ export class ServiceEngine {
     );
     sphere.position.z = 5;
 
+    const sphere1: Mesh = MeshBuilder.CreateSphere(
+      "sphere1",
+      { diameter: 0.5 },
+      this.scene
+    );
+    sphere1.position.z = 5;
+    sphere1.position.y = 3;
+
     window.addEventListener("resize", () => {
       engine.resize();
     });

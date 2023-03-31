@@ -18,7 +18,9 @@ defmodule Thexr.Application do
       # Start Finch
       {Finch, name: Thexr.Finch},
       # Start the Endpoint (http/https)
-      ThexrWeb.Endpoint
+      ThexrWeb.Endpoint,
+      {Registry, keys: :unique, name: Thexr.Registry},
+      ThexrWeb.Space.GrandSupervisor
       # Start a worker by calling: Thexr.Worker.start_link(arg)
       # {Thexr.Worker, arg}
     ]

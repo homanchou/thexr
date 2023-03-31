@@ -13,6 +13,7 @@ export class ServiceBus {
   public xrs: XRS;
   public incoming_commands = new Subject<Command>();
   public head_movement = new Subject<PosRot>();
+  // left movement, right movement
   public entered_space = new Subject<boolean>();
 
   public init(xrs: XRS) {

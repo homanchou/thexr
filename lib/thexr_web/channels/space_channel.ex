@@ -49,7 +49,7 @@ defmodule ThexrWeb.SpaceChannel do
     push(socket, "member_poses", lookup_member_poses(socket))
 
     # test to see if we receive some kind of message when the genserver timesout
-    Process.monitor(Swarm.whereis_name(socket.assigns.space_id))
+    # Process.monitor(Swarm.whereis_name(socket.assigns.space_id))
 
     # SpaceServer.process_event(
     #   socket.assigns.space_id,

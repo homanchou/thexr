@@ -61,7 +61,7 @@ config :logger, :console,
 config :phoenix, :json_library, Jason
 
 config :syn,
-  scopes: [:supervisor, :membership, :server]
+  scopes: [:manager]
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

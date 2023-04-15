@@ -80,13 +80,33 @@ export class ServiceBroker {
     // for debugging
     this.channel.onMessage = (event, payload, _) => {
       if (!event.startsWith("phx_") && !event.startsWith("chan_")) {
-        console.warn(event, payload);
+        console.debug(event, payload);
       }
       return payload;
     };
 
     this.channel.on("stoc", (command) => {
       this.xrs.handle_command(command);
+    });
+
+    this.channel.on("existing_poses", (poses: { [member_id: string]: any }) => {
+      for (const [member_id, pose] of Object.entries(poses)) {
+        if (member_id === this.xrs.config.member_id) {
+          // set camera to previous position
+          this.xrs.services.engine.setActiveCameraToPosRot(pose.head);
+        } else {
+          this.xrs.handle_command({
+            eid: member_id,
+            set: { avatar_pose: pose },
+          });
+        }
+      }
+    });
+
+    this.channel.on("poses", (poses: { [member_id: string]: any }) => {
+      for (const [member_id, pose] of Object.entries(poses)) {
+        this.xrs.handle_command({ eid: member_id, set: { avatar_pose: pose } });
+      }
     });
 
     this.channel.on(
@@ -101,19 +121,9 @@ export class ServiceBroker {
     );
 
     this.channel.on("server_lost", () => {
+      console.debug("server was lost");
       window.location.href = "/";
     });
-
-    this.channel.on(
-      "member_poses",
-      (payload: {
-        [member_id: string]: { head: { pos: number[]; rot: number[] } };
-      }) => {
-        for (const [member_id, avatar_pose] of Object.entries(payload)) {
-          this.xrs.handle_command({ eid: member_id, set: { avatar_pose } });
-        }
-      }
-    );
 
     this.channel
       .join()

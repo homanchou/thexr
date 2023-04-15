@@ -3,10 +3,12 @@ import { ServiceBroker } from "./services/broker";
 import { ServiceEngine } from "./services/engine";
 import { ServiceStore } from "./services/store";
 import { ServiceBus } from "./services/bus";
+import { ServiceTone } from "./services/tone";
 
 /* systems */
 import { SystemAvatar } from "./systems/avatar";
 import { SystemShape } from "./systems/shape";
+import { SystemSequencer } from "./systems/sequencer";
 
 type Config = {
   member_id: string;
@@ -33,6 +35,7 @@ export class XRS {
     bus: new ServiceBus(),
     engine: new ServiceEngine(),
     broker: new ServiceBroker(),
+    tone: new ServiceTone(),
   };
 
   debug() {
@@ -44,6 +47,7 @@ export class XRS {
     Object.values(this.services).forEach((service) => service.init(this));
     this.add_system(new SystemAvatar());
     this.add_system(new SystemShape());
+    this.add_system(new SystemSequencer());
     this.systems.forEach((sys) => sys.init(this));
   }
 
@@ -72,8 +76,16 @@ export class XRS {
       this.services.bus.incoming_commands.next(command);
       return;
     }
+
+    if (command.del !== undefined) {
+      for (const component_name of command.del) {
+        this.services.store.del_component(command.eid, component_name);
+      }
+      this.services.bus.incoming_commands.next(command);
+      return;
+    }
+
     if (command.ttl !== undefined) {
-      console.log("handle command got command.ttl", command);
       for (const component_name of this.services.store.component_names(
         command.eid
       )) {
@@ -83,13 +95,6 @@ export class XRS {
         });
         this.services.store.del_entity(command.eid);
       }
-      return;
-    }
-    if (command.del !== undefined) {
-      for (const component_name of command.del) {
-        this.services.store.del_component(command.eid, component_name);
-      }
-      this.services.bus.incoming_commands.next(command);
       return;
     }
   }

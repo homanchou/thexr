@@ -1,7 +1,6 @@
 defmodule ThexrWeb.SpaceChannel do
   use ThexrWeb, :channel
   alias ThexrWeb.Presence
-  alias ThexrWeb.SpaceServer
 
   @impl true
   def join("space:" <> space_id, _payload, socket) do
@@ -13,8 +12,8 @@ defmodule ThexrWeb.SpaceChannel do
   # by sending replies to requests from the client
   @impl true
   def handle_in("imoved", payload, socket) do
-    SpaceServer.process_event(
-      socket.assigns.space_id,
+    ThexrWeb.Space.Manager.process_event(
+      socket.assigns.space_pid,
       %{
         "eid" => socket.assigns.member_id,
         "set" => %{"avatar_pose" => payload}
@@ -25,59 +24,60 @@ defmodule ThexrWeb.SpaceChannel do
     # TODO, cache this in ETS, and then broadcast at some desired interval
 
     # broadcast_from(socket, "stoc", %{eid: socket.assigns.member_id, set: %{avatar_pos: payload}})
-    add_location_to_ets(socket, payload)
+    # add_location_to_ets(socket, payload)
     {:noreply, socket}
   end
 
   def handle_in("ctos", payload, socket) do
     # broadcast_from(socket, "stoc", payload)
-    SpaceServer.process_event(socket.assigns.space_id, payload, self())
+    ThexrWeb.Space.Manager.process_event(socket.assigns.space_id, payload, self())
     {:noreply, socket}
   end
 
   @impl true
   def handle_info(:after_join, socket) do
-    {:ok, _} =
-      Presence.track(socket, socket.assigns.member_id, %{
-        online_at: inspect(System.system_time(:second))
-      })
+    case Thexr.Registry.whereis(:manager, socket.assigns.space_id) do
+      nil ->
+        # in dev if server rebooted and open tab reconnects, we should get redirected
+        push(socket, "server_lost", %{})
+        {:noreply, socket}
 
-    push(socket, "presence_state", Presence.list(socket))
+      manager_pid ->
+        {:ok, _} =
+          Presence.track(socket, socket.assigns.member_id, %{
+            online_at: inspect(System.system_time(:second))
+          })
 
-    space_state = SpaceServer.state(socket.assigns.space_id)
-    socket = assign(socket, :ets_ref, space_state.ets_ref)
-    push(socket, "member_poses", lookup_member_poses(socket))
+        push(socket, "presence_state", Presence.list(socket))
+        socket = assign(socket, :space_pid, manager_pid)
 
-    # test to see if we receive some kind of message when the genserver timesout
-    # Process.monitor(Swarm.whereis_name(socket.assigns.space_id))
+        push(socket, "existing_poses", ThexrWeb.Space.Manager.get_poses(manager_pid))
 
-    # SpaceServer.process_event(
-    #   socket.assigns.space_id,
-    #   %{
-    #     "eid" => socket.assigns.member_id,
-    #     "set" => %{"avatar" => "box"}
-    #   },
-    #   self()
-    # )
+        # test to see if we receive some kind of message when the genserver timesout
+        Process.monitor(manager_pid)
 
-    {:noreply, socket}
+        {:noreply, socket}
+    end
   end
 
   # the moniter
 
   def handle_info(
-        {:DOWN, _ref, :process, _pid,
-         {:function_clause,
-          [
-            {ThexrWeb.SpaceServer, :handle_info, [:timeout | _], _}
-            | _
-          ]}},
+        {:DOWN, _ref, :process, _pid, :shutdown},
         socket
       ) do
     push(socket, "server_lost", %{})
 
-    IO.inspect("a timeout happened")
+    IO.inspect("a timeout happened and monitored by space channel")
     {:stop, "server_timeout", socket}
+  end
+
+  def handle_info(
+        {:DOWN, _ref, :process, _pid, _reason},
+        socket
+      ) do
+    # ignore other kinds of crashes, supervisor will bring it back up
+    {:noreply, socket}
   end
 
   @impl true
@@ -96,14 +96,14 @@ defmodule ThexrWeb.SpaceChannel do
     {:noreply, socket}
   end
 
-  def add_location_to_ets(socket, payload) do
-    :ets.insert(socket.assigns.ets_ref, {socket.assigns.member_id, payload})
-  end
+  # def add_location_to_ets(socket, payload) do
+  #   :ets.insert(socket.assigns.ets_ref, {socket.assigns.member_id, payload})
+  # end
 
-  def lookup_member_poses(socket) do
-    :ets.tab2list(socket.assigns.ets_ref)
-    |> Enum.reduce(%{}, fn {member_id, payload}, acc ->
-      Map.put(acc, member_id, payload)
-    end)
-  end
+  # def lookup_member_poses(socket) do
+  #   :ets.tab2list(socket.assigns.ets_ref)
+  #   |> Enum.reduce(%{}, fn {member_id, payload}, acc ->
+  #     Map.put(acc, member_id, payload)
+  #   end)
+  # end
 end

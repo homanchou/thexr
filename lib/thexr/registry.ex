@@ -10,14 +10,28 @@ defmodule Thexr.Registry do
     via_tuple(scope, space_id) |> GenServer.whereis()
   end
 
-  def register_name({scope, term}, pid) do
+  def register_name({scope, term} = thingy, pid) do
+    IO.inspect("about to register --------------------------")
+    IO.inspect(thingy)
+    IO.inspect(" --------------------------")
+
     case :syn.register(scope, term, pid) do
-      :ok -> :yes
-      _ -> :no
+      :ok ->
+        IO.inspect("did register-------------------------")
+        IO.inspect(scope)
+        IO.inspect(term)
+        IO.inspect(pid)
+        :yes
+
+      _ ->
+        IO.inspect("did not register")
+        :no
     end
   end
 
-  def unregister_name({scope, term}) do
+  def unregister_name({scope, term} = thingy) do
+    IO.inspect("tried to unregister-----------")
+    IO.inspect(thingy)
     :syn.unregister(scope, term)
   end
 

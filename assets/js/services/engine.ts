@@ -6,11 +6,13 @@ import "@babylonjs/inspector"; // Injects a local ES6 version of the inspector t
 import { MeshBuilder } from "@babylonjs/core/Meshes/";
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math";
 import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
+import { UniversalCamera } from "@babylonjs/core/Cameras/universalCamera";
 import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import "@babylonjs/core/Materials/standardMaterial";
 import { XRS } from "../xrs";
 import { fromBabylonObservable, truncate } from "../misc";
+import { PosRot } from "./bus";
 
 export class ServiceEngine {
   public canvas: HTMLCanvasElement;
@@ -26,6 +28,21 @@ export class ServiceEngine {
     this.create_scene();
   }
 
+  activeCamera() {
+    return this.scene.activeCamera;
+  }
+
+  setActiveCameraToPosRot(pos_rot: PosRot) {
+    const cam = this.activeCamera() as UniversalCamera;
+    cam.position.fromArray(pos_rot.pos);
+    cam.rotationQuaternion.copyFromFloats(
+      pos_rot.rot[0],
+      pos_rot.rot[1],
+      pos_rot.rot[2],
+      pos_rot.rot[3]
+    );
+  }
+
   create_canvas() {
     this.canvas = document.createElement("canvas") as HTMLCanvasElement;
     this.canvas.id = this.xrs.config.space_id;
@@ -37,18 +54,19 @@ export class ServiceEngine {
     this.canvas.style.outline = "none";
 
     document.body.append(this.canvas);
+
+    this.xrs.services.bus.entered_space.subscribe(() => {
+      this.canvas.focus();
+    });
   }
 
-  create_scene() {
-    // initialize babylon scene and engine
-    const engine = new Engine(this.canvas, true);
-    this.scene = new Scene(engine);
-    window["scene"] = this.scene;
+  createFreeCamera() {
     this.free_camera = new FreeCamera("free", Vector3.Zero(), this.scene);
     this.free_camera.attachControl(this.canvas, true);
     this.free_camera.inertia = 0;
     this.free_camera.angularSensibility = 500;
     this.free_camera.minZ = 0.1;
+    this.free_camera.rotationQuaternion = new Quaternion();
 
     fromBabylonObservable(
       this.free_camera.onViewMatrixChangedObservable
@@ -61,6 +79,14 @@ export class ServiceEngine {
       // such as detect gestures, stepping over things, trigger other events
       // notify others etc
     });
+  }
+
+  create_scene() {
+    // initialize babylon scene and engine
+    const engine = new Engine(this.canvas, true);
+    this.scene = new Scene(engine);
+    window["scene"] = this.scene;
+    this.createFreeCamera();
 
     const light1: HemisphericLight = new HemisphericLight(
       "light1",

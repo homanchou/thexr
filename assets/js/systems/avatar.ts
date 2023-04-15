@@ -22,7 +22,6 @@ export class SystemAvatar {
     });
 
     this.xrs.services.bus.on_set(["avatar"]).subscribe((cmd) => {
-      console.log("avatar was set for ", cmd);
       if (cmd.eid !== this.xrs.config.member_id) {
         let mesh = this.xrs.services.engine.scene.getMeshByName(cmd.eid);
         if (!mesh) {

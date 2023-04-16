@@ -13,21 +13,20 @@ defmodule ThexrWeb.Space.Snapshotter do
     {:ok,
      %{
        space_id: space_id,
-       aggregate: %{},
-       entities_to_delete: [],
-       components_to_delete: [],
+       commands: [],
        flush_ref: nil
      }}
   end
 
-  def get_aggregate(pid) do
-    GenServer.call(pid, :get_aggregate)
+  def get_stash(pid) do
+    GenServer.call(pid, :get_stash)
   end
 
-  def handle_call(:get_aggregate, _from, state) do
-    {:noreply, state.aggregate, state}
+  def handle_call(:get_stash, _from, state) do
+    {:reply, state.commands, state}
   end
 
+  # ignore the following commands, because they are handled in membership
   def handle_cast({:process_event, %{"set" => %{"avatar_pose" => _}}, _}, state) do
     {:noreply, state}
   end
@@ -40,12 +39,8 @@ defmodule ThexrWeb.Space.Snapshotter do
     {:noreply, state}
   end
 
-  def handle_cast({:process_event, %{"eid" => eid, "set" => components}, _}, state) do
-    entity_value = Map.get(state.aggregate, eid, %{})
-    entity_value = Enum.into(components, entity_value)
-    state = %{state | aggregate: Map.put(state.aggregate, eid, entity_value)}
-    IO.inspect(state.aggregate, label: "aggregate")
-
+  # for everything else just stash the command for now
+  def handle_cast({:process_event, cmd, _}, state) do
     state =
       case Map.get(state, :flush_ref) do
         nil ->
@@ -55,59 +50,16 @@ defmodule ThexrWeb.Space.Snapshotter do
           state
       end
 
-    {:noreply, state}
-  end
-
-  def handle_cast({:process_event, %{"eid" => eid, "del" => component_names}, _}, state) do
-    entity_value = Map.get(state.aggregate, eid, %{})
-
-    entity_value =
-      Map.reject(entity_value, fn {k, _v} ->
-        Enum.member?(component_names, k)
-      end)
-
-    aggregate = Map.put(state.aggregate, eid, entity_value)
-    components_to_delete = [{eid, component_names} | state.components_to_delete]
-
-    state =
-      case Map.get(state, :flush_ref) do
-        nil ->
-          Map.put(state, :flush_ref, Process.send_after(self(), :flush_snapshot, @flush_after))
-
-        _ ->
-          state
-      end
-
-    {:noreply, %{state | aggregate: aggregate, components_to_delete: components_to_delete}}
-  end
-
-  def handle_cast({:process_event, %{"eid" => entity_to_delete, "ttl" => _}, _}, state) do
-    aggregate = Map.delete(state.aggregate, entity_to_delete)
-    entities_to_delete = [entity_to_delete | state.entities_to_delete]
-
-    state =
-      case Map.get(state, :flush_ref) do
-        nil ->
-          Map.put(state, :flush_ref, Process.send_after(self(), :flush_snapshot, @flush_after))
-
-        _ ->
-          state
-      end
-
-    {:noreply, %{state | aggregate: aggregate, entities_to_delete: entities_to_delete}}
+    {:noreply, %{state | commands: [cmd | state.commands]}}
   end
 
   def handle_info(:flush_snapshot, state) do
     Thexr.Worlds.update_snapshot(
       state.space_id,
-      state.aggregate,
-      state.components_to_delete,
-      state.entities_to_delete
+      Enum.reverse(state.commands)
     )
 
-    state = Map.put(state, :aggregate, %{})
-    state = Map.put(state, :components_to_delete, [])
-    state = Map.put(state, :entities_to_delete, [])
+    state = Map.put(state, :commands, [])
     state = Map.put(state, :flush_ref, nil)
     {:noreply, state}
   end

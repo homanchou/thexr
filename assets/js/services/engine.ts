@@ -88,26 +88,6 @@ export class ServiceEngine {
     window["scene"] = this.scene;
     this.createFreeCamera();
 
-    const light1: HemisphericLight = new HemisphericLight(
-      "light1",
-      new Vector3(1, 1, 0),
-      this.scene
-    );
-    const sphere: Mesh = MeshBuilder.CreateSphere(
-      "sphere",
-      { diameter: 1 },
-      this.scene
-    );
-    sphere.position.z = 5;
-
-    const sphere1: Mesh = MeshBuilder.CreateSphere(
-      "sphere1",
-      { diameter: 0.5 },
-      this.scene
-    );
-    sphere1.position.z = 5;
-    sphere1.position.y = 3;
-
     window.addEventListener("resize", () => {
       engine.resize();
     });

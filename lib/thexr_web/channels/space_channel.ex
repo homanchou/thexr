@@ -53,6 +53,8 @@ defmodule ThexrWeb.SpaceChannel do
 
         push(socket, "existing_poses", ThexrWeb.Space.Manager.get_poses(manager_pid))
 
+        push(socket, "snapshot", ThexrWeb.Space.Manager.get_snapshot(socket.assigns.space_id))
+
         # test to see if we receive some kind of message when the genserver timesout
         Process.monitor(manager_pid)
 

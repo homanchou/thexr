@@ -1,45 +1,44 @@
 # Thexr
 
-problems with crud like schema
+Problem with sequencer and also whiteboard
+  -> A. DELTA: msg msg should be small like a delta (just the brush stroke or diff)
+  -> B. FULL state of thing: else msg is the entire new mesh, sequence or image
 
-if you look at a single message, avatar pose it's fine
-but then ttl 0, it might not be specific to you.  you'd need to know if it previously
-  had avatar pose
+Fast realtime changes:
+  -> A. easy for front end
+  -> B. easy for front end (could be slow for large canvas, sequences)
+Full snap shot of state can be saved:
+  -> A. hard for backend to know what to do with custom msg
+  -> B. easy for backend, just replace with data
 
-entities that embed a lot of history
+Best of both worlds is a hybrid approach:
+  -> keep an array of deltas that can be replayed on a previous snapshot
+     the array is also part of the state
+  -> the leader will flush deltas into a new snapshot and create a new set event
+     periodically when there are too many deltas
 
-A white board that takes hundreds of strokes.  is that an attribute/component of the white board?  or an entity of it's own that has a component associated with the white board?  do you keep these strokes around forever?  or squash them into an image?
+Example:
+  white board
+    -> base is blank white or off white canvas
+    -> delta is empty array
+    As people paint brush strokes, we use cmd {eid: "", push: {name: "", value: ""}}
+    When front end receives message it will draw a new stroke.
 
-- need a leader to optimize ?
+    A late comer will get a snapshot that includes all deltas and play all strokes on the empty canvas
 
-space channel receives channe.push(...)
+    The leader will, on the 101th stroke, send a new command: {eid: "", set: {strokes: [], canvas: "base64....." }}, deleting all previous strokes and compressing data to the canvas.
 
-all clients forward them to a single genserver by pid.  That genserver will forward the message to a list of subscribers.
+    use pop command to undo
 
-space supervisor - is a standard supervisor, with 2 children in :rest_for_one, 
-    if feature supervisor is restarted then only feature supervisor is restarted
-    but if manager is restarted, then both manager and feature supervisor will be restarted
-  - manager - when starts has an empty map of pids for features
-  - feature supervisor - standard supervisor with 3 children,
-    - membership, after init will send manager its pid
-    - snapshotter
-    - journaler
-    
-all messages go to the manager, which forwards to the features subscribers
-when a feature launches it will ping the manager to add it
+  sequencer
+    -> base is 2 dimensional array of 40 by 16 zeros.
 
- that will number sequence the events, timestamp them and then put them into genstage
 
-- movement is so frequent, it has a special message for imoved, but then it doesn't have the same event source record..., avatar pose is the correct event source [ can be made on the server ]
+  3d painting
 
-- event sourcing, be able to replay who came and left
-   - need a proper "entity joined and entity left" message.
-   - presence state and presence diff are for the client, but 
-   - [ can be made on the server with every join and terminate ]
-
-- the front end is incapable of saying when user left, so need space channel to do that
-  - if doing that... then don't really need phoenix channels
-
+===
+  -> A. good for those in the scene, only front end needs to know how to interpret reflected msg
+  -> B. msg is massive, and although straight forward to parse, is 
 
 To start your Phoenix server:
 

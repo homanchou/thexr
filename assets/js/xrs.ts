@@ -9,10 +9,18 @@ import { ServiceTone } from "./services/tone";
 import { SystemAvatar } from "./systems/avatar";
 import { SystemShape } from "./systems/shape";
 import { SystemSequencer } from "./systems/sequencer";
+import { SystemLighting } from "./systems/lighting";
+import { SystemTransform } from "./systems/transform";
 
 type Config = {
   member_id: string;
   space_id: string;
+};
+
+type Vars = {
+  member_id: string;
+  space_id: string;
+  snapshot: { [eid: string]: any };
 };
 
 export type Command = {
@@ -42,13 +50,20 @@ export class XRS {
     this.services.engine.scene.debugLayer.show({ embedMode: true });
   }
 
-  init(vars: Config) {
-    this.config = vars;
+  init(vars: Vars) {
+    this.config = { member_id: vars.member_id, space_id: vars.space_id };
     Object.values(this.services).forEach((service) => service.init(this));
+
     this.add_system(new SystemAvatar());
     this.add_system(new SystemShape());
+    this.add_system(new SystemTransform());
+    this.add_system(new SystemLighting());
     this.add_system(new SystemSequencer());
+
     this.systems.forEach((sys) => sys.init(this));
+    for (const [eid, components] of Object.entries(vars.snapshot)) {
+      this.handle_command({ eid: eid, set: components });
+    }
   }
 
   entered() {

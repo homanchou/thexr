@@ -51,9 +51,34 @@ defmodule Thexr.Worlds do
 
   """
   def create_space(attrs \\ %{}) do
-    %Space{}
-    |> Space.create_changeset(attrs)
-    |> Repo.insert()
+    {:ok, space} =
+      %Space{}
+      |> Space.create_changeset(attrs)
+      |> Repo.insert()
+
+    # create some basic primitives in the space
+    ThexrWeb.Space.GrandSupervisor.start_space(space.id)
+    pid = ThexrWeb.Space.Manager.get_pid(space.id)
+
+    ThexrWeb.Space.Manager.process_event(
+      pid,
+      %{
+        "eid" => "cylinder",
+        "set" => %{"shape" => "cylinder", "pos" => [0, 0.5, 3]}
+      },
+      nil
+    )
+
+    ThexrWeb.Space.Manager.process_event(
+      pid,
+      %{
+        "eid" => "light",
+        "set" => %{"lighting" => "whatevs"}
+      },
+      nil
+    )
+
+    {:ok, space}
   end
 
   @doc """
@@ -88,6 +113,8 @@ defmodule Thexr.Worlds do
   """
   def delete_space(%Space{} = space) do
     Repo.delete(space)
+    delete_all_entities(space.id)
+    {:ok, space}
   end
 
   @doc """
@@ -105,6 +132,11 @@ defmodule Thexr.Worlds do
 
   # entities
 
+  def get_entities(snapshot_id) do
+    query = from(e in Entity, select: {e.id, e.components}, where: e.snapshot_id == ^snapshot_id)
+    Repo.all(query) |> Enum.into(%{})
+  end
+
   def get_entity(snapshot_id, entity_id) do
     query =
       from e in Entity,
@@ -114,13 +146,13 @@ defmodule Thexr.Worlds do
     Repo.one(query)
   end
 
-  def delete_component(snapshot_id, entity_id, component_name) do
+  def delete_components(snapshot_id, entity_id, component_names) do
     case get_entity(snapshot_id, entity_id) do
       nil ->
         :not_found
 
       entity_components ->
-        entity_components = Map.delete(entity_components, component_name)
+        entity_components = Map.drop(entity_components, component_names)
 
         statement =
           from e in Entity,
@@ -161,24 +193,53 @@ defmodule Thexr.Worlds do
     Repo.delete_all(query)
   end
 
+  def delete_all_entities(snapshot_id) do
+    query =
+      from(e in Entity,
+        where: e.snapshot_id == ^snapshot_id
+      )
+
+    Repo.delete_all(query)
+  end
+
+  def update_snapshot(aggregate, commands) when is_map(aggregate) do
+    Enum.reduce(commands, aggregate, fn cmd, agg ->
+      eid = cmd["eid"]
+
+      case cmd do
+        %{"ttl" => _} ->
+          Map.delete(agg, eid)
+
+        %{"set" => components} ->
+          prev_components = Map.get(agg, eid, %{})
+          merged_components = Enum.into(prev_components, components)
+          Map.put(agg, eid, merged_components)
+
+        %{"del" => component_names} ->
+          prev_components = Map.get(agg, eid, %{})
+          new_components = Map.drop(prev_components, component_names)
+          Map.put(agg, eid, new_components)
+      end
+    end)
+  end
+
   def update_snapshot(
         snapshot_id,
-        aggregate,
-        components_to_delete,
-        entitites_to_delete
+        commands
       ) do
-    Enum.each(aggregate, fn {entity_id, components} ->
-      upsert_entity(snapshot_id, entity_id, components)
-    end)
+    Enum.each(commands, fn cmd ->
+      eid = cmd["eid"]
 
-    Enum.each(components_to_delete, fn {entity_id, component_names} ->
-      Enum.each(component_names, fn component_name ->
-        delete_component(snapshot_id, entity_id, component_name)
-      end)
-    end)
+      case cmd do
+        %{"ttl" => _} ->
+          delete_entity(snapshot_id, eid)
 
-    Enum.each(entitites_to_delete, fn entity_id ->
-      delete_entity(snapshot_id, entity_id)
+        %{"set" => components} ->
+          upsert_entity(snapshot_id, eid, components)
+
+        %{"del" => component_names} ->
+          delete_components(snapshot_id, eid, component_names)
+      end
     end)
   end
 end

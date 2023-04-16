@@ -89,6 +89,7 @@ export class ServiceBroker {
       this.xrs.handle_command(command);
     });
 
+    // only when we first connect, we'll set camera to previously sent location
     this.channel.on("existing_poses", (poses: { [member_id: string]: any }) => {
       for (const [member_id, pose] of Object.entries(poses)) {
         if (member_id === this.xrs.config.member_id) {
@@ -103,6 +104,7 @@ export class ServiceBroker {
       }
     });
 
+    // continuously as folks move around
     this.channel.on("poses", (poses: { [member_id: string]: any }) => {
       for (const [member_id, pose] of Object.entries(poses)) {
         this.xrs.handle_command({ eid: member_id, set: { avatar_pose: pose } });
@@ -119,6 +121,16 @@ export class ServiceBroker {
         }
       }
     );
+
+    this.channel.on("snapshot", (snapshot: { [eid: string]: any }) => {
+      // clear the stage
+      this.xrs.services.engine.scene.lights.forEach((l) => l.dispose());
+      this.xrs.services.engine.scene.meshes.forEach((m) => m.dispose());
+
+      for (const [eid, components] of Object.entries(snapshot)) {
+        this.xrs.handle_command({ eid: eid, set: components });
+      }
+    });
 
     this.channel.on("server_lost", () => {
       console.debug("server was lost");

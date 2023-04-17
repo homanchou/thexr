@@ -28,18 +28,18 @@ const globals = {
     varName: "BABYLON.GUI",
     type: "cjs",
   },
-  // "agora-rtc-sdk-ng": {
-  //   varName: "AgoraRTC",
-  //   namedExports: [
-  //     "IAgoraRTCClient",
-  //     "IAgoraRTCRemoteUser",
-  //     "ILocalVideoTrack",
-  //     "IMicrophoneAudioTrack",
-  //     "IRemoteAudioTrack",
-  //     "IRemoteVideoTrack",
-  //   ],
-  //   type: "cjs",
-  // },
+  "agora-rtc-sdk-ng": {
+    varName: "AgoraRTC",
+    namedExports: [
+      "IAgoraRTCClient",
+      "IAgoraRTCRemoteUser",
+      "ILocalVideoTrack",
+      "IMicrophoneAudioTrack",
+      "IRemoteAudioTrack",
+      "IRemoteVideoTrack",
+    ],
+    type: "cjs",
+  },
   "ammojs-typed": {
     varName: "Ammo",
     type: "cjs",

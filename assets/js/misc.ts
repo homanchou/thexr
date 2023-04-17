@@ -1,4 +1,5 @@
-import { Observable as BJSObservable } from "@babylonjs/core/Misc/observable";
+import * as BABYLON from "babylonjs";
+
 import { Observable } from "rxjs/internal/Observable";
 /**
  * Wraps a Babylon Observable into an rxjs Observable
@@ -17,10 +18,10 @@ import { Observable } from "rxjs/internal/Observable";
  * ```
  */
 export function fromBabylonObservable<T>(
-  bjsObservable: BJSObservable<T>
+  bjsObservable: BABYLON.Observable<T>
 ): Observable<T> {
   return new Observable<T>((subscriber) => {
-    if (!(bjsObservable instanceof BJSObservable)) {
+    if (!(bjsObservable instanceof BABYLON.Observable)) {
       throw new TypeError("the object passed in must be a Babylon Observable");
     }
 

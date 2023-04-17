@@ -1,6 +1,5 @@
 import { XRS } from "../xrs";
-import { Vector3 } from "@babylonjs/core/Maths/math";
-import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
+import * as BABYLON from "babylonjs";
 
 export class SystemLighting {
   public xrs: XRS;
@@ -10,7 +9,11 @@ export class SystemLighting {
     this.xrs.services.bus.on_set(["lighting"]).subscribe((cmd) => {
       const scene = this.xrs.services.engine.scene;
       const lighting = cmd.set!["lighting"] as string;
-      new HemisphericLight(cmd.eid, new Vector3(0, 1, 0), scene);
+      new BABYLON.HemisphericLight(
+        cmd.eid,
+        new BABYLON.Vector3(0, 1, 0),
+        scene
+      );
     });
   }
 

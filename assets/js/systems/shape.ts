@@ -1,6 +1,5 @@
 import { XRS } from "../xrs";
-import { MeshBuilder, Mesh, CreateCylinder } from "@babylonjs/core/Meshes";
-import { Quaternion } from "@babylonjs/core/Maths/math";
+import * as BABYLON from "babylonjs";
 
 export class SystemShape {
   public xrs: XRS;
@@ -24,13 +23,16 @@ export class SystemShape {
       ) {
         const builderFunctionName = this.getMeshBuilderFunctionName(shape);
         if (shape === "plane") {
-          shape_params["sideOrientation"] = Mesh.DOUBLESIDE;
+          shape_params["sideOrientation"] = BABYLON.Mesh.DOUBLESIDE;
         }
         if (shape === "cone") {
           shape_params["diameterTop"] = 0;
         }
-        const mesh = MeshBuilder[builderFunctionName](cmd.eid, shape_params);
-        mesh.rotationQuaternion = new Quaternion();
+        const mesh = BABYLON.MeshBuilder[builderFunctionName](
+          cmd.eid,
+          shape_params
+        );
+        mesh.rotationQuaternion = new BABYLON.Quaternion();
       } else {
         throw new Error("unsupported shape");
       }

@@ -5,17 +5,23 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "deploy": "cd .. && mix assets.deploy && rm -f _build/esbuild"
+    "deploy": "node esbuild.js --deploy",
+    "watch": "node esbuild.js --watch"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "phoenix": "file:../deps/phoenix",
+    "phoenix_html": "file:../deps/phoenix_html",
+    "phoenix_live_view": "file:../deps/phoenix_live_view",
+    "@fal-works/esbuild-plugin-global-externals": "^2.1.2",
     "@types/phoenix": "^1.5.4",
+    "ammojs-typed": "^1.0.6",
+    "babylonjs": "^5.56.0",
+    "babylonjs-gui": "^5.56.0",
+    "babylonjs-materials": "^5.56.0",
+    "esbuild": "^0.16.17",
     "rxjs": "^7.8.0",
     "tone": "^14.7.77"
-  },
-  "devDependencies": {
-    "@babylonjs/core": "^5.40.1",
-    "@babylonjs/inspector": "^5.40.1"
   }
 }

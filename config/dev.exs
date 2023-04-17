@@ -27,7 +27,8 @@ config :thexr, ThexrWeb.Endpoint,
   debug_errors: true,
   secret_key_base: "uPngSgg5var+V+nDPAECrC01hRgmSPFajoPCU2BgSq2BW21h1HPyvVyik0XMJLJz",
   watchers: [
-    esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]},
+    # esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]},
+    npm: ["run", "watch", cd: Path.expand("../assets", __DIR__)],
     tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]}
   ]
 

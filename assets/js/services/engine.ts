@@ -1,25 +1,17 @@
-import { Engine } from "@babylonjs/core/Engines";
-import { Scene } from "@babylonjs/core/scene";
-import "@babylonjs/core/Debug/debugLayer"; // Augments the scene with the debug methods
-import "@babylonjs/inspector"; // Injects a local ES6 version of the inspector to prevent automatically relying on the none compatible version
+import * as BABYLON from "babylonjs";
 
-import { MeshBuilder } from "@babylonjs/core/Meshes/";
-import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math";
-import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
-import { UniversalCamera } from "@babylonjs/core/Cameras/universalCamera";
-import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
-import { Mesh } from "@babylonjs/core/Meshes/mesh";
-import "@babylonjs/core/Materials/standardMaterial";
 import { XRS } from "../xrs";
+
 import { fromBabylonObservable, truncate } from "../misc";
+
 import { PosRot } from "./bus";
 
 export class ServiceEngine {
   public canvas: HTMLCanvasElement;
   public name = "scene";
   public xrs: XRS;
-  public free_camera: FreeCamera;
-  public scene: Scene;
+  public free_camera: BABYLON.FreeCamera;
+  public scene: BABYLON.Scene;
 
   init(xrs: XRS) {
     this.xrs = xrs;
@@ -33,7 +25,7 @@ export class ServiceEngine {
   }
 
   setActiveCameraToPosRot(pos_rot: PosRot) {
-    const cam = this.activeCamera() as UniversalCamera;
+    const cam = this.activeCamera() as BABYLON.UniversalCamera;
     cam.position.fromArray(pos_rot.pos);
     cam.rotationQuaternion.copyFromFloats(
       pos_rot.rot[0],
@@ -61,12 +53,16 @@ export class ServiceEngine {
   }
 
   createFreeCamera() {
-    this.free_camera = new FreeCamera("free", Vector3.Zero(), this.scene);
+    this.free_camera = new BABYLON.FreeCamera(
+      "free",
+      BABYLON.Vector3.Zero(),
+      this.scene
+    );
     this.free_camera.attachControl(this.canvas, true);
     this.free_camera.inertia = 0;
     this.free_camera.angularSensibility = 500;
     this.free_camera.minZ = 0.1;
-    this.free_camera.rotationQuaternion = new Quaternion();
+    this.free_camera.rotationQuaternion = new BABYLON.Quaternion();
 
     fromBabylonObservable(
       this.free_camera.onViewMatrixChangedObservable
@@ -83,8 +79,8 @@ export class ServiceEngine {
 
   create_scene() {
     // initialize babylon scene and engine
-    const engine = new Engine(this.canvas, true);
-    this.scene = new Scene(engine);
+    const engine = new BABYLON.Engine(this.canvas, true);
+    this.scene = new BABYLON.Scene(engine);
     window["scene"] = this.scene;
     this.createFreeCamera();
 

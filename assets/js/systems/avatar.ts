@@ -1,7 +1,6 @@
 import { XRS } from "../xrs";
 import { throttleTime } from "rxjs/operators";
-import { MeshBuilder } from "@babylonjs/core/Meshes";
-import { Quaternion } from "@babylonjs/core/Maths/math";
+import * as BABYLON from "babylonjs";
 
 export class SystemAvatar {
   name = "avatar";
@@ -25,7 +24,7 @@ export class SystemAvatar {
       if (cmd.eid !== this.xrs.config.member_id) {
         let mesh = this.xrs.services.engine.scene.getMeshByName(cmd.eid);
         if (!mesh) {
-          mesh = MeshBuilder.CreateBox(cmd.eid, {});
+          mesh = BABYLON.MeshBuilder.CreateBox(cmd.eid, {});
         }
       }
     });
@@ -39,7 +38,7 @@ export class SystemAvatar {
       const mesh = this.xrs.services.engine.scene.getMeshByName(cmd.eid);
       if (mesh) {
         mesh.position.fromArray(cmd.set?.avatar_pose.head.pos);
-        mesh.rotationQuaternion = Quaternion.FromArray(
+        mesh.rotationQuaternion = BABYLON.Quaternion.FromArray(
           cmd.set?.avatar_pose.head.rot
         );
       }

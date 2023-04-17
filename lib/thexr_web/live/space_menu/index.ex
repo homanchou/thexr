@@ -3,11 +3,17 @@ defmodule ThexrWeb.SpaceMenu.Index do
 
   @impl true
   def mount(_params, %{"member_id" => member_id, "space_id" => space_id}, socket) do
-    {:ok, assign(socket, entered: false, member_id: member_id, space_id: space_id), layout: false}
+    {:ok,
+     assign(socket, menu_opened: false, entered: false, member_id: member_id, space_id: space_id),
+     layout: false}
   end
 
   @impl true
   def handle_event("enter_space", _, socket) do
     {:noreply, assign(socket, entered: true)}
+  end
+
+  def handle_event("toggle_menu", _, socket) do
+    {:noreply, assign(socket, menu_opened: !socket.assigns.menu_opened)}
   end
 end

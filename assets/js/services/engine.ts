@@ -2,7 +2,7 @@ import * as BABYLON from "babylonjs";
 
 import { XRS } from "../xrs";
 
-import { fromBabylonObservable, truncate } from "../misc";
+import { fromBabylonObservable, truncate } from "../utils/misc";
 
 import { PosRot } from "./bus";
 

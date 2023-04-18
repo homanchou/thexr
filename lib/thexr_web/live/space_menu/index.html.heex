@@ -31,5 +31,15 @@
         <button class="block bg-red-500" phx-click="toggle_menu">Menu</button>
       </div>
     <% end %>
+
+    <%= if @mic == "unmuted" do %>
+      <button class="block bg-blue-500 absolute z-50 top-8" onclick="xrs.toggle_mic()">
+        Mute
+      </button>
+    <% else %>
+      <button class="block bg-gray-500 absolute z-50 top-8" onclick="xrs.toggle_mic()">
+        Muted
+      </button>
+    <% end %>
   <% end %>
 <% end %>

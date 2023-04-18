@@ -59,11 +59,6 @@ export class ServiceWebRTC {
       // to get the permission prompt out of the way early
       const devices = await AgoraRTC.getDevices();
       console.debug("devices", devices);
-      this.xrs.send_command({
-        eid: this.xrs.config.member_id,
-        set: { mic: this.my_mic_pref },
-        tag: "m",
-      });
     });
 
     // currently we get app id when we join channel
@@ -71,6 +66,11 @@ export class ServiceWebRTC {
       .pipe(take(1))
       .subscribe((env_vars) => {
         this.options.appid = env_vars.agora_app_id;
+        this.xrs.send_command({
+          eid: this.xrs.config.member_id,
+          set: { mic: this.my_mic_pref },
+          tag: "m",
+        });
       });
 
     this.client.on("user-published", (user, mediaType) => {
@@ -94,8 +94,21 @@ export class ServiceWebRTC {
     this.monitor_mics();
   }
 
+  toggle_mic() {
+    let new_pref = "muted";
+    if (this.i_am_muted()) {
+      new_pref = "unmuted";
+    }
+    this.xrs.send_command({
+      eid: this.xrs.config.member_id,
+      set: { mic: new_pref },
+      tag: "m",
+    });
+  }
+
   start_connection_observer() {
     this.connection_observer.subscribe(async (val) => {
+      console.log("connection observer", val);
       if (val === "be_connected") {
         if (this.state.joined === false) {
           await this.join();
@@ -146,9 +159,12 @@ export class ServiceWebRTC {
   }
 
   updateCountAndJoinOrUnjoin() {
+    console.log(this.member_mics);
     if (this.count_members_connected() >= 2 && this.count_mics_on() >= 1) {
+      console.log("send connected");
       this.connection_observer.next("be_connected");
     } else {
+      console.log("send disconnected");
       this.connection_observer.next("be_disconnected");
     }
   }

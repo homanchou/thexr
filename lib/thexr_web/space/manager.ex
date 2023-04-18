@@ -20,8 +20,12 @@ defmodule ThexrWeb.Space.Manager do
     Thexr.Worlds.update_snapshot(persisted, commands)
   end
 
-  def get_members(pid) do
+  def get_members(pid) when is_pid(pid) do
     GenServer.call(pid, :get_members)
+  end
+
+  def get_members(space_id) do
+    GenServer.call(via_tuple(:manager, space_id), :get_members)
   end
 
   def init({:ok, sup_pid}) do

@@ -10,7 +10,7 @@ defmodule Thexr.Registry do
     via_tuple(scope, space_id) |> GenServer.whereis()
   end
 
-  def register_name({scope, term} = thingy, pid) do
+  def register_name({scope, term}, pid) do
     case :syn.register(scope, term, pid) do
       :ok ->
         :yes

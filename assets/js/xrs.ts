@@ -73,6 +73,10 @@ export class XRS {
     this.services.bus.entered_space.next(true);
   }
 
+  toggle_mic() {
+    this.services.webrtc.toggle_mic();
+  }
+
   send_command(command: Command, send_to_self: boolean = true) {
     this.services.broker.push(command);
     if (send_to_self) {

@@ -3,7 +3,7 @@ import * as BABYLON from "babylonjs";
 import { XRS } from "../xrs";
 
 import { fromBabylonObservable, truncate } from "../utils/misc";
-
+import Ammo from "ammojs-typed";
 import { PosRot } from "./bus";
 
 export class ServiceEngine {
@@ -77,10 +77,22 @@ export class ServiceEngine {
     });
   }
 
-  create_scene() {
+  async create_scene() {
     // initialize babylon scene and engine
-    const engine = new BABYLON.Engine(this.canvas, true);
+
+    const engine = new BABYLON.Engine(this.canvas, true, {
+      preserveDrawingBuffer: true,
+      stencil: true,
+    });
+
     this.scene = new BABYLON.Scene(engine);
+
+    const gravityVector = new BABYLON.Vector3(0, -9.81, 0);
+    const ammo = await Ammo();
+
+    const physicsPlugin = new BABYLON.AmmoJSPlugin(true, ammo);
+    this.scene.enablePhysics(gravityVector, physicsPlugin);
+
     window["scene"] = this.scene;
     this.createFreeCamera();
 

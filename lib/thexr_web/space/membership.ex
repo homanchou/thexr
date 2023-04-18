@@ -12,8 +12,8 @@ defmodule ThexrWeb.Space.Membership do
     GenServer.call(pid, :get_state)
   end
 
-  def active_poses(pid) do
-    GenServer.call(pid, :get_active_poses)
+  def active_members(pid) do
+    GenServer.call(pid, :get_active_members)
   end
 
   # def member_joined(pid, member_id) do
@@ -34,27 +34,25 @@ defmodule ThexrWeb.Space.Membership do
 
   def init(space_id) do
     send(self(), :after_init)
-    {:ok, %{space_id: space_id, disconnected: %{}, poses: %{}, ref: nil, should_sync: false}}
+    {:ok, %{space_id: space_id, disconnected: %{}, members: %{}, ref: nil, should_sync: false}}
   end
 
   def handle_call(:get_state, _from, state) do
     {:reply, state, state}
   end
 
-  def handle_call(:get_active_poses, _from, state) do
-    active_poses =
-      Map.reject(state.poses, fn {k, _v} ->
-        Map.has_key?(state.disconnected, k)
-      end)
+  def handle_call(:get_active_members, _from, state) do
+    active_members = Map.drop(state.members, Map.keys(state.disconnected))
 
-    {:reply, active_poses, state}
+    {:reply, active_members, state}
   end
 
+  # member moved so
   def handle_cast(
-        {:process_event, %{"eid" => member_id, "set" => %{"avatar_pose" => avatar_pose}}, _from},
+        {:process_event, %{"set" => %{"avatar_pose" => _}} = cmd, _from},
         state
       ) do
-    new_poses = Map.put(state.poses, member_id, avatar_pose)
+    state = %{state | members: Thexr.Worlds.update_snapshot(state.members, [cmd])}
 
     state =
       case state.ref do
@@ -66,13 +64,16 @@ defmodule ThexrWeb.Space.Membership do
           state
       end
 
-    {:noreply, %{state | poses: new_poses, should_sync: true}}
+    {:noreply, %{state | should_sync: true}}
   end
 
+  # someone came back, so remove the disconnection
   def handle_cast(
-        {:process_event, %{"eid" => member_id, "set" => %{"avatar" => _}}, _from},
+        {:process_event, %{"eid" => member_id, "set" => %{"avatar" => _}} = cmd, _from},
         state
       ) do
+    state = %{state | members: Thexr.Worlds.update_snapshot(state.members, [cmd])}
+
     case Map.pop(state.disconnected, member_id) do
       {nil, _prev_disconnected} ->
         {:noreply, state}
@@ -83,32 +84,26 @@ defmodule ThexrWeb.Space.Membership do
     end
   end
 
-  def handle_cast({:process_event, %{"eid" => member_id, "del" => ["avatar"]}, _}, state) do
+  def handle_cast(
+        {:process_event, %{"eid" => member_id, "ttl" => _, "tag" => "m"} = cmd, _},
+        state
+      ) do
+    state = %{state | members: Thexr.Worlds.update_snapshot(state.members, [cmd])}
+
     ref = Process.send_after(self(), {:kick_check, member_id}, @kick_check_timeout)
     new_disconnected = Map.put(state.disconnected, member_id, ref)
     {:noreply, %{state | disconnected: new_disconnected}}
   end
 
-  def handle_cast({:process_event, _, _}, state) do
+  # mic or any other components changes on a member
+  def handle_cast({:process_event, %{"tag" => "m"} = cmd, _}, state) do
+    state = %{state | members: Thexr.Worlds.update_snapshot(state.members, [cmd])}
     {:noreply, state}
   end
 
-  # def handle_cast({:member_joined, member_id}, state) do
-  #   case Map.pop(state.disconnected, member_id) do
-  #     {nil, _prev_disconnected} ->
-  #       {:noreply, state}
-
-  #     {ref, new_disconnected} ->
-  #       Process.cancel_timer(ref)
-  #       {:noreply, %{state | disconnected: new_disconnected}}
-  #   end
-  # end
-
-  # def handle_cast({:member_left, member_id}, state) do
-  #   ref = Process.send_after(self(), {:kick_check, member_id}, @kick_check_timeout)
-  #   new_disconnected = Map.put(state.disconnected, member_id, ref)
-  #   {:noreply, %{state | disconnected: new_disconnected}}
-  # end
+  def handle_cast({:process_event, _, _}, state) do
+    {:noreply, state}
+  end
 
   def handle_info(:after_init, state) do
     ThexrWeb.Space.Manager.save_pid(state.space_id, :membership, self())
@@ -116,7 +111,12 @@ defmodule ThexrWeb.Space.Membership do
   end
 
   def handle_info(:broadcast_all_member_poses, %{should_sync: true} = state) do
-    ThexrWeb.Endpoint.broadcast("space:#{state.space_id}", "poses", state.poses)
+    movements =
+      Enum.reduce(state.members, %{}, fn {member_id, components}, acc ->
+        Map.put(acc, member_id, Map.get(components, "avatar_pose"))
+      end)
+
+    ThexrWeb.Endpoint.broadcast("space:#{state.space_id}", "movements", movements)
     ref = Process.send_after(self(), :broadcast_all_member_poses, @interval)
     {:noreply, %{state | ref: ref, should_sync: false}}
   end
@@ -125,10 +125,16 @@ defmodule ThexrWeb.Space.Membership do
     {:noreply, %{state | ref: nil}}
   end
 
+  # clean up memory of members that have already left for a time of @kick_check_timeout
   def handle_info({:kick_check, member_id}, state) do
-    new_poses = Map.delete(state.poses, member_id)
+    new_members = Map.delete(state.members, member_id)
 
-    state = %{state | disconnected: Map.delete(state.disconnected, member_id), poses: new_poses}
+    state = %{
+      state
+      | disconnected: Map.delete(state.disconnected, member_id),
+        members: new_members
+    }
+
     {:noreply, state}
   end
 end

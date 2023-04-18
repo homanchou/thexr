@@ -20,8 +20,8 @@ defmodule ThexrWeb.Space.Manager do
     Thexr.Worlds.update_snapshot(persisted, commands)
   end
 
-  def get_poses(pid) do
-    GenServer.call(pid, :get_poses)
+  def get_members(pid) do
+    GenServer.call(pid, :get_members)
   end
 
   def init({:ok, sup_pid}) do
@@ -50,18 +50,13 @@ defmodule ThexrWeb.Space.Manager do
     GenServer.call(via_tuple(:manager, space_id), :state)
   end
 
-  # def start_children(space_supervisor_pid, space_id) do
-  #   IO.inspect("in start children")
-  #   GenServer.cast(__MODULE__, {:start_children, space_supervisor_pid, space_id})
-  # end
-
   def handle_call(:state, _from, state) do
     {:reply, state, state}
   end
 
-  def handle_call(:get_poses, _from, state) do
+  def handle_call(:get_members, _from, state) do
     membership_pid = state.membership
-    poses = ThexrWeb.Space.Membership.active_poses(membership_pid)
+    poses = ThexrWeb.Space.Membership.active_members(membership_pid)
 
     {:reply, poses, state}
   end
@@ -84,7 +79,6 @@ defmodule ThexrWeb.Space.Manager do
 
     # TODO,
     # 1. save history of events
-    # IO.inspect(cmd, label: "received event")
     # ThexrWeb.Endpoint.broadcast_from(pid, )
     # 2. create projection
     {:noreply, state, @timeout}
@@ -96,7 +90,6 @@ defmodule ThexrWeb.Space.Manager do
   end
 
   def handle_info(:timeout, state) do
-    IO.inspect("space timed out, shutting it down")
     ThexrWeb.Space.GrandSupervisor.stop_space(state.sup_pid)
     {:stop, :timeout, state}
   end

@@ -15,6 +15,8 @@ export class ServiceBus {
   public head_movement = new Subject<PosRot>();
   // left movement, right movement
   public entered_space = new Subject<boolean>();
+  // a place to push env variables
+  public channel_connected = new Subject<{ agora_app_id: string }>();
 
   public init(xrs: XRS) {
     this.xrs = xrs;

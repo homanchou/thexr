@@ -51,7 +51,7 @@ defmodule Thexr.MixProject do
       {:jason, "~> 1.4"},
       {:plug_cowboy, "~> 2.6"},
       {:syn, "~> 3.3"},
-      {:deep_merge, "~> 1.0"},
+      {:dotenv_parser, "~> 2.0"}
     ]
   end
 

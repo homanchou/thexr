@@ -19,15 +19,18 @@ defmodule ThexrWeb.Presence do
     for {member_id, _} <- joins do
       ThexrWeb.Space.Manager.process_event(
         space_id,
-        %{"eid" => member_id, "set" => %{"avatar" => "box"}},
+        %{"eid" => member_id, "set" => %{"avatar" => "box"}, "tag" => "m"},
         nil
       )
     end
 
     for {member_id, _} <- leaves do
+      # you may notice that this command includes a tag
+      # Otherwise it's much harder to know that a ttl is targeting
+      # an entity representing a person
       ThexrWeb.Space.Manager.process_event(
         space_id,
-        %{"eid" => member_id, "del" => ["avatar"], "ttl" => 0},
+        %{"eid" => member_id, "ttl" => 0, "tag" => "m"},
         nil
       )
     end

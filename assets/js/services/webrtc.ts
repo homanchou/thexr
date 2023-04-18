@@ -12,17 +12,19 @@ import type {
 import { filter, take, Subject, scan } from "rxjs";
 import type { XRS } from "../xrs";
 
-/*
-export class SystemWebRTC {
+export class ServiceWebRTC {
   public name = "webrtc";
   public xrs: XRS;
   public client: IAgoraRTCClient;
-  public verification = new Subject<"be_connected" | "be_disconnected">();
+  public connection_observer = new Subject<
+    "be_connected" | "be_disconnected"
+  >();
+  public my_mic_pref: "muted" | "unmuted";
   public state = { joined: false, published_audio: false };
   // keep track of how many users in total have
   // we need at least 2 (so someone can hear)
   // and at least 1 of them has to be unmuted
-  public micsMuted: Record<string, boolean> = {};
+  public member_mics: { [member_id: string]: "muted" | "unmuted" } = {};
   public localTracks: {
     videoTrack: ILocalVideoTrack | null;
     audioTrack: IMicrophoneAudioTrack | null;
@@ -42,18 +44,34 @@ export class SystemWebRTC {
     this.xrs = xrs;
     this.options.channel = this.xrs.config.space_id;
     this.options.uid = this.xrs.config.member_id;
+    // we are muted by default until we start publishing
+    // TODO, save this into a user preference, session storage
+    this.my_mic_pref = "muted";
 
-    // currently we get app id when we join channel
-    this.xrs.services.bus.entered_space.subscribe(() => {
-        this.options.appid = resp.agora_app_id;
-    })
-
-   
     // AgoraRTC.setLogLevel(0);
     this.client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
     this.client.on("exception", (event) => {
       console.warn(event);
     });
+
+    this.xrs.services.bus.entered_space.subscribe(async () => {
+      // after user interacted with page, we can ask for devices
+      // to get the permission prompt out of the way early
+      const devices = await AgoraRTC.getDevices();
+      console.debug("devices", devices);
+      this.xrs.send_command({
+        eid: this.xrs.config.member_id,
+        set: { mic: this.my_mic_pref },
+        tag: "m",
+      });
+    });
+
+    // currently we get app id when we join channel
+    this.xrs.services.bus.channel_connected
+      .pipe(take(1))
+      .subscribe((env_vars) => {
+        this.options.appid = env_vars.agora_app_id;
+      });
 
     this.client.on("user-published", (user, mediaType) => {
       this.subscribeRemoteUser(user, mediaType);
@@ -67,20 +85,29 @@ export class SystemWebRTC {
     AgoraRTC.enableLogUpload();
 
     // create a single event loop for connecting and disconnecting
-    // so we can be idempotent, and avoid race conditions
-    this.verification.subscribe(async (val) => {
+    // - this joins or unjoins the agora session
+    // - and will publish or unpublish audio depending on our mic mute/unmute status
+    this.start_connection_observer();
+
+    // monitor total connected mics to be efficient with connecting to agora
+    // no sense joining if only one person or if everyone is on mute
+    this.monitor_mics();
+  }
+
+  start_connection_observer() {
+    this.connection_observer.subscribe(async (val) => {
       if (val === "be_connected") {
         if (this.state.joined === false) {
           await this.join();
           this.state.joined = true;
         }
         // if we're unmuted and not yet publishing audio, we should publish
-        if (!this.state.published_audio && !this.context.my_mic_muted) {
+        if (!this.state.published_audio && !this.i_am_muted()) {
           await this.publishAudio();
           this.state.published_audio = true;
         }
         // if we're muted, but publishing audio, we should unpublish it
-        else if (this.context.my_mic_muted && this.state.published_audio) {
+        else if (this.i_am_muted() && this.state.published_audio) {
           await this.unpublishAudio();
           this.state.published_audio = false;
         }
@@ -92,57 +119,37 @@ export class SystemWebRTC {
         }
       }
     });
-
-    // this system observes attendance, but isn't called by synergizer since system name isn't a component
-    this.context.signalHub.incoming
-      .on("entity_created")
-      .pipe(
-        filter((msg) => msg.components?.attendance?.mic_muted !== undefined)
-      )
-      .subscribe((msg) => {
-        this.micsMuted[msg.id] = msg.components.attendance.mic_muted;
-        this.updateCountAndJoinOrUnjoin();
-      });
-
-    this.context.signalHub.incoming
-      .on("components_upserted")
-      .pipe(
-        filter(
-          (msg) =>
-            msg.components?.attendance?.mic_muted !== undefined &&
-            this.micsMuted[msg.id] !== undefined
-        )
-      )
-      .subscribe((msg) => {
-        this.micsMuted[msg.id] = msg.components.attendance.mic_muted;
-        this.updateCountAndJoinOrUnjoin();
-      });
-
-    this.context.signalHub.incoming
-      .on("entities_deleted")
-      .subscribe(({ ids }) => {
-        ids.forEach((id) => {
-          if (this.micsMuted[id] !== undefined) {
-            delete this.micsMuted[id];
-          }
-        });
-        this.updateCountAndJoinOrUnjoin();
-      });
   }
 
-  numConnected() {
-    return Object.keys(this.micsMuted).length;
+  monitor_mics() {
+    this.xrs.services.bus.on_set(["mic"]).subscribe((cmd) => {
+      this.member_mics[cmd.eid] = cmd.set?.mic;
+      this.updateCountAndJoinOrUnjoin();
+    });
+    this.xrs.services.bus.on_del(["mic"]).subscribe((cmd) => {
+      delete this.member_mics[cmd.eid];
+      this.updateCountAndJoinOrUnjoin();
+    });
   }
 
-  numMicsOn() {
-    return Object.values(this.micsMuted).filter((v) => v === false).length;
+  i_am_muted() {
+    return this.member_mics[this.xrs.config.member_id] !== "unmuted";
+  }
+
+  count_members_connected() {
+    return Object.keys(this.member_mics).length;
+  }
+
+  count_mics_on() {
+    return Object.values(this.member_mics).filter((v) => v === "unmuted")
+      .length;
   }
 
   updateCountAndJoinOrUnjoin() {
-    if (this.numConnected() >= 2 && this.numMicsOn() >= 1) {
-      this.verification.next("be_connected");
+    if (this.count_members_connected() >= 2 && this.count_mics_on() >= 1) {
+      this.connection_observer.next("be_connected");
     } else {
-      this.verification.next("be_disconnected");
+      this.connection_observer.next("be_disconnected");
     }
   }
 
@@ -191,10 +198,10 @@ export class SystemWebRTC {
       if (mediaType === "video") {
         // need to create a video container
         const playerContainer = this.createVideoPlayerContainer(user);
-        user.videoTrack.play(playerContainer);
+        user.videoTrack?.play(playerContainer);
       }
       if (mediaType === "audio") {
-        user.audioTrack.play();
+        user.audioTrack?.play();
       }
     } catch (e) {
       console.error(e);
@@ -224,4 +231,3 @@ export class SystemWebRTC {
     return playerContainer;
   }
 }
-*/

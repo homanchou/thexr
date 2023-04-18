@@ -4,6 +4,7 @@ import { ServiceEngine } from "./services/engine";
 import { ServiceStore } from "./services/store";
 import { ServiceBus } from "./services/bus";
 import { ServiceTone } from "./services/tone";
+import { ServiceWebRTC } from "./services/webrtc";
 
 /* systems */
 import { SystemAvatar } from "./systems/avatar";
@@ -24,10 +25,11 @@ type Vars = {
 };
 
 export type Command = {
-  eid: string;
+  eid: string; // entity id
   set?: { [component_name: string]: any }; // components to patch
   del?: string[]; // component_names
   ttl?: number; // a way to expire an entire entity
+  tag?: string; // optional label to make it easier to filter in the backend
 };
 
 export interface ISystem {
@@ -44,6 +46,7 @@ export class XRS {
     engine: new ServiceEngine(),
     broker: new ServiceBroker(),
     tone: new ServiceTone(),
+    webrtc: new ServiceWebRTC(),
   };
 
   debug() {

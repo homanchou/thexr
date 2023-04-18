@@ -90,37 +90,44 @@ export class ServiceBroker {
     });
 
     // only when we first connect, we'll set camera to previously sent location
-    this.channel.on("existing_poses", (poses: { [member_id: string]: any }) => {
-      for (const [member_id, pose] of Object.entries(poses)) {
-        if (member_id === this.xrs.config.member_id) {
-          // set camera to previous position
-          this.xrs.services.engine.setActiveCameraToPosRot(pose.head);
-        } else {
-          this.xrs.handle_command({
-            eid: member_id,
-            set: { avatar_pose: pose },
-          });
-        }
-      }
-    });
-
-    // continuously as folks move around
-    this.channel.on("poses", (poses: { [member_id: string]: any }) => {
-      for (const [member_id, pose] of Object.entries(poses)) {
-        this.xrs.handle_command({ eid: member_id, set: { avatar_pose: pose } });
-      }
-    });
-
     this.channel.on(
-      "presence_state",
-      (payload: { [member_id: string]: any }) => {
-        for (const member_id of Object.keys(payload)) {
-          if (!this.xrs.services.store.state[member_id]) {
-            this.xrs.handle_command({ eid: member_id, set: { avatar: "box" } });
+      "existing_members",
+      (members: { [member_id: string]: any }) => {
+        for (const [member_id, components] of Object.entries(members)) {
+          if (member_id === this.xrs.config.member_id) {
+            // set camera to previous position, if there was one
+            if (components.avatar_pose) {
+              this.xrs.services.engine.setActiveCameraToPosRot(
+                components.avatar_pose.head
+              );
+            }
+          } else {
+            this.xrs.handle_command({
+              eid: member_id,
+              set: components,
+            });
           }
         }
       }
     );
+
+    // continuously as folks move around
+    this.channel.on("movements", (movements: { [member_id: string]: any }) => {
+      for (const [member_id, avatar_pose] of Object.entries(movements)) {
+        this.xrs.handle_command({ eid: member_id, set: { avatar_pose } });
+      }
+    });
+
+    // this.channel.on(
+    //   "presence_state",
+    //   (payload: { [member_id: string]: any }) => {
+    //     for (const member_id of Object.keys(payload)) {
+    //       if (!this.xrs.services.store.state[member_id]) {
+    //         this.xrs.handle_command({ eid: member_id, set: { avatar: "box" } });
+    //       }
+    //     }
+    //   }
+    // );
 
     this.channel.on("snapshot", (snapshot: { [eid: string]: any }) => {
       // clear the stage
@@ -139,7 +146,9 @@ export class ServiceBroker {
 
     this.channel
       .join()
-      .receive("ok", (resp) => {})
+      .receive("ok", (resp) => {
+        this.xrs.services.bus.channel_connected.next(resp);
+      })
       .receive("error", (resp) => {});
   }
 }

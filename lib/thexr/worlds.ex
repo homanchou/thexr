@@ -170,7 +170,7 @@ defmodule Thexr.Worlds do
           components
 
         old_components ->
-          DeepMerge.deep_merge(old_components, components)
+          Map.merge(old_components, components)
       end
 
     Repo.insert(
@@ -212,8 +212,8 @@ defmodule Thexr.Worlds do
 
         %{"set" => components} ->
           prev_components = Map.get(agg, eid, %{})
-          merged_components = Enum.into(prev_components, components)
-          Map.put(agg, eid, merged_components)
+          merged_components = Map.merge(prev_components, components)
+          Map.put(agg, eid, merged_components) |> IO.inspect(label: "final agg")
 
         %{"del" => component_names} ->
           prev_components = Map.get(agg, eid, %{})

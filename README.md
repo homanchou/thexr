@@ -1,5 +1,13 @@
 # Thexr
 
+Problem with mic "muted" | "unmuted" as a component, is that sending this :set command
+will cause snapshot to save it because snapshot only resists member join, leaves, movements thus far
+
+-> this idea of members not being part of the snapshot, and membership keeping everything related to members, makes it seems like the command should have a hint that this is a user entity?
+
+otherwise we should treat all entities the same....
+
+
 Problem with sequencer and also whiteboard
   -> A. DELTA: msg msg should be small like a delta (just the brush stroke or diff)
   -> B. FULL state of thing: else msg is the entire new mesh, sequence or image

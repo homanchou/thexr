@@ -5,7 +5,7 @@ defmodule ThexrWeb.SpaceChannel do
   @impl true
   def join("space:" <> space_id, _payload, socket) do
     send(self(), :after_join)
-    {:ok, assign(socket, space_id: space_id)}
+    {:ok, %{"agora_app_id" => System.get_env("AGORA_APP_ID")}, assign(socket, space_id: space_id)}
   end
 
   # Channels can be used in a request/response fashion
@@ -16,7 +16,8 @@ defmodule ThexrWeb.SpaceChannel do
       socket.assigns.space_pid,
       %{
         "eid" => socket.assigns.member_id,
-        "set" => %{"avatar_pose" => payload}
+        "set" => %{"avatar_pose" => payload},
+        "tag" => "m"
       },
       self()
     )
@@ -48,10 +49,10 @@ defmodule ThexrWeb.SpaceChannel do
             online_at: inspect(System.system_time(:second))
           })
 
-        push(socket, "presence_state", Presence.list(socket))
+        # push(socket, "presence_state", Presence.list(socket))
         socket = assign(socket, :space_pid, manager_pid)
 
-        push(socket, "existing_poses", ThexrWeb.Space.Manager.get_poses(manager_pid))
+        push(socket, "existing_members", ThexrWeb.Space.Manager.get_members(manager_pid))
 
         push(socket, "snapshot", ThexrWeb.Space.Manager.get_snapshot(socket.assigns.space_id))
 
@@ -70,7 +71,6 @@ defmodule ThexrWeb.SpaceChannel do
       ) do
     push(socket, "server_lost", %{})
 
-    IO.inspect("a timeout happened and monitored by space channel")
     {:stop, "server_timeout", socket}
   end
 

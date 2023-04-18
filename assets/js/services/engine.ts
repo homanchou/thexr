@@ -68,8 +68,8 @@ export class ServiceEngine {
       this.free_camera.onViewMatrixChangedObservable
     ).subscribe((cam) => {
       this.xrs.services.bus.head_movement.next({
-        pos: cam.position.asArray(),
-        rot: cam.absoluteRotation.asArray(),
+        pos: cam.position.asArray().map((v) => truncate(v)),
+        rot: cam.absoluteRotation.asArray().map((v) => truncate(v)),
       });
       // might want to do something with camera "head" movement
       // such as detect gestures, stepping over things, trigger other events

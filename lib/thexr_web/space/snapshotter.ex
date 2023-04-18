@@ -27,15 +27,7 @@ defmodule ThexrWeb.Space.Snapshotter do
   end
 
   # ignore the following commands, because they are handled in membership
-  def handle_cast({:process_event, %{"set" => %{"avatar_pose" => _}}, _}, state) do
-    {:noreply, state}
-  end
-
-  def handle_cast({:process_event, %{"set" => %{"avatar" => _}}, _}, state) do
-    {:noreply, state}
-  end
-
-  def handle_cast({:process_event, %{"eid" => _, "del" => ["avatar"]}, _}, state) do
+  def handle_cast({:process_event, %{"tag" => "m"}, _}, state) do
     {:noreply, state}
   end
 

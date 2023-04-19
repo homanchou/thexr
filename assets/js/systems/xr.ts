@@ -16,7 +16,6 @@ export class SystemXR {
   name = "xr";
   public scene: BABYLON.Scene;
   public xrHelper: BABYLON.WebXRDefaultExperience;
-  public exitingXR$;
   public controllerPhysicsFeature: BABYLON.WebXRControllerPhysics;
   public teleportation: BABYLON.WebXRMotionControllerTeleportation;
   // convenience cache
@@ -52,9 +51,7 @@ export class SystemXR {
     this.xrs = xrs;
     this.bus = xrs.services.bus;
     this.scene = xrs.services.engine.scene;
-    this.exitingXR$ = this.bus.xr_state.pipe(
-      filter((msg) => msg === BABYLON.WebXRState.EXITING_XR)
-    );
+
     this.bus.entered_space.subscribe(async () => {
       this.start();
     });
@@ -276,7 +273,7 @@ export class SystemXR {
     });
 
     componentButtonObservable$
-      .pipe(takeUntil(this.exitingXR$))
+      .pipe(takeUntil(this.bus.exiting_xr))
       .subscribe((xr_button_change_evt) => {
         this.bus[`${hand}_${component.type}`].next(xr_button_change_evt);
       });
@@ -293,7 +290,7 @@ export class SystemXR {
       };
     });
     componentAxisObservable$
-      .pipe(takeUntil(this.exitingXR$))
+      .pipe(takeUntil(this.bus.exiting_xr))
       .subscribe((axisChange) => {
         this.bus[`${hand}_axes`].next(axisChange);
       });
@@ -305,7 +302,7 @@ export class SystemXR {
 
     this.bus[`${hand}_squeeze`]
       .pipe(
-        takeUntil(this.exitingXR$),
+        takeUntil(this.bus.exiting_xr),
         map((val) => val.controllerComponent.pressed),
         distinctUntilChanged()
       )
@@ -319,7 +316,7 @@ export class SystemXR {
 
     this.bus[`${hand}_trigger`]
       .pipe(
-        takeUntil(this.exitingXR$),
+        takeUntil(this.bus.exiting_xr),
         map((val) => val.controllerComponent.pressed),
         distinctUntilChanged()
       )
@@ -333,7 +330,7 @@ export class SystemXR {
 
     this.bus[`${hand}_button`]
       .pipe(
-        takeUntil(this.exitingXR$),
+        takeUntil(this.bus.exiting_xr),
         // map((val) => val.pressed),
         distinctUntilChanged(
           (a, b) =>

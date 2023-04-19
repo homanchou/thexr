@@ -64,7 +64,20 @@ defmodule Thexr.Worlds do
       pid,
       %{
         "eid" => "cylinder",
-        "set" => %{"shape" => "cylinder", "pos" => [0, 0.5, 3]}
+        "set" => %{"shape" => "cylinder", "pos" => [0, 0.5, 3], "floor" => %{}}
+      },
+      nil
+    )
+
+    ThexrWeb.Space.Manager.process_event(
+      pid,
+      %{
+        "eid" => "ground",
+        "set" => %{
+          "shape" => "ground",
+          "shape_params" => %{"width" => 10, "height" => 10},
+          "pos" => [0, 0, 0]
+        }
       },
       nil
     )

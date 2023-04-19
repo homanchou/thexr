@@ -25,8 +25,6 @@ defmodule ThexrWeb.SpaceMenu.Index do
       ThexrWeb.Space.Manager.get_members(socket.assigns.space_id)
       |> get_in([socket.assigns.member_id, "mic"])
 
-    IO.inspect(mic, label: "mic")
-
     {:noreply, assign(socket, mic: mic, menu_opened: !socket.assigns.menu_opened)}
   end
 

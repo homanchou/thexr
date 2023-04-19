@@ -34,7 +34,7 @@ export class SystemShape {
         );
         mesh.rotationQuaternion = new BABYLON.Quaternion();
       } else {
-        throw new Error("unsupported shape");
+        throw new Error(`unsupported shape ${shape}`);
       }
     });
   }

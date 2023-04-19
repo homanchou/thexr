@@ -24,7 +24,12 @@ export class ServiceBus {
   // a place to push env variables
   public channel_connected = new Subject<{ agora_app_id: string }>();
   public xr_state = new Subject<BABYLON.WebXRState>();
-
+  public entering_xr = this.xr_state.pipe(
+    filter((msg) => msg === BABYLON.WebXRState.ENTERING_XR)
+  );
+  public exiting_xr = this.xr_state.pipe(
+    filter((msg) => msg === BABYLON.WebXRState.EXITING_XR)
+  );
   public controller_ready = new Subject<{
     hand: string;
     grip: BABYLON.AbstractMesh;

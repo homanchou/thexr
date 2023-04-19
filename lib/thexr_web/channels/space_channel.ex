@@ -59,7 +59,6 @@ defmodule ThexrWeb.SpaceChannel do
 
         # push(socket, "presence_state", Presence.list(socket))
         socket = assign(socket, :space_pid, manager_pid)
-
         push(socket, "existing_members", ThexrWeb.Space.Manager.get_members(manager_pid))
 
         push(socket, "snapshot", ThexrWeb.Space.Manager.get_snapshot(socket.assigns.space_id))

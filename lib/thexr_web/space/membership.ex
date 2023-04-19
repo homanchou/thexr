@@ -88,7 +88,8 @@ defmodule ThexrWeb.Space.Membership do
         {:process_event, %{"eid" => member_id, "ttl" => _, "tag" => "m"} = cmd, _},
         state
       ) do
-    state = %{state | members: Thexr.Worlds.update_snapshot(state.members, [cmd])}
+    # here, we don't want to delete it just yet because they might just be refreshing their tab
+    # state = %{state | members: Thexr.Worlds.update_snapshot(state.members, [cmd])}
 
     ref = Process.send_after(self(), {:kick_check, member_id}, @kick_check_timeout)
     new_disconnected = Map.put(state.disconnected, member_id, ref)

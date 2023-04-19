@@ -13,6 +13,7 @@ import { SystemSequencer } from "./systems/sequencer";
 import { SystemLighting } from "./systems/lighting";
 import { SystemTransform } from "./systems/transform";
 import { SystemXR } from "./systems/xr";
+import { SystemXRFlight } from "./systems/flight";
 
 type Config = {
   member_id: string;
@@ -64,6 +65,7 @@ export class XRS {
     this.add_system(new SystemLighting());
     this.add_system(new SystemSequencer());
     this.add_system(new SystemXR());
+    this.add_system(new SystemXRFlight());
 
     this.systems.forEach((sys) => sys.init(this));
     for (const [eid, components] of Object.entries(vars.snapshot)) {

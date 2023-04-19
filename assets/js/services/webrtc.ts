@@ -108,7 +108,6 @@ export class ServiceWebRTC {
 
   start_connection_observer() {
     this.connection_observer.subscribe(async (val) => {
-      console.log("connection observer", val);
       if (val === "be_connected") {
         if (this.state.joined === false) {
           await this.join();
@@ -159,12 +158,9 @@ export class ServiceWebRTC {
   }
 
   updateCountAndJoinOrUnjoin() {
-    console.log(this.member_mics);
     if (this.count_members_connected() >= 2 && this.count_mics_on() >= 1) {
-      console.log("send connected");
       this.connection_observer.next("be_connected");
     } else {
-      console.log("send disconnected");
       this.connection_observer.next("be_disconnected");
     }
   }

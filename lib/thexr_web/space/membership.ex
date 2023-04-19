@@ -85,7 +85,7 @@ defmodule ThexrWeb.Space.Membership do
   end
 
   def handle_cast(
-        {:process_event, %{"eid" => member_id, "ttl" => _, "tag" => "m"} = cmd, _},
+        {:process_event, %{"eid" => member_id, "ttl" => _, "tag" => "m"}, _},
         state
       ) do
     # here, we don't want to delete it just yet because they might just be refreshing their tab

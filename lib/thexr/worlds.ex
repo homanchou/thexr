@@ -64,7 +64,7 @@ defmodule Thexr.Worlds do
       pid,
       %{
         "eid" => "cylinder",
-        "set" => %{"shape" => "cylinder", "pos" => [0, 0.5, 3], "floor" => %{}}
+        "set" => %{"shape" => "cylinder", "pos" => [0, 0.5, 3]}
       },
       nil
     )
@@ -76,7 +76,8 @@ defmodule Thexr.Worlds do
         "set" => %{
           "shape" => "ground",
           "shape_params" => %{"width" => 10, "height" => 10},
-          "pos" => [0, 0, 0]
+          "pos" => [0, 0, 0],
+          "floor" => nil
         }
       },
       nil

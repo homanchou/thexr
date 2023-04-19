@@ -110,6 +110,6 @@ defmodule ThexrWeb.Space.Manager do
     GenServer.cast(to, {:process_event, cmd, nil})
   end
 
-  def dispatch_journaler(cmd, to) do
+  def dispatch_journaler(_cmd, _to) do
   end
 end

@@ -20,7 +20,7 @@ defmodule Thexr.Registry do
     end
   end
 
-  def unregister_name({scope, term} = thingy) do
+  def unregister_name({scope, term}) do
     :syn.unregister(scope, term)
   end
 

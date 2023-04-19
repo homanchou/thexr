@@ -14,7 +14,7 @@ defmodule ThexrWeb.SpaceChannel do
   @impl true
   def handle_in("imoved", payload, socket) do
     ThexrWeb.Space.Manager.process_event(
-      socket.assigns.space_pid,
+      socket.assigns.manager_pid,
       %{
         "eid" => socket.assigns.member_id,
         "set" => %{"avatar_pose" => payload},
@@ -58,16 +58,26 @@ defmodule ThexrWeb.SpaceChannel do
           })
 
         # push(socket, "presence_state", Presence.list(socket))
-        socket = assign(socket, :space_pid, manager_pid)
-        push(socket, "existing_members", ThexrWeb.Space.Manager.get_members(manager_pid))
+        socket = assign(socket, :manager_pid, manager_pid)
 
-        push(socket, "snapshot", ThexrWeb.Space.Manager.get_snapshot(socket.assigns.space_id))
-
-        # test to see if we receive some kind of message when the genserver timesout
-        Process.monitor(manager_pid)
-
+        Process.send_after(self(), :send_initial_state, 10)
         {:noreply, socket}
     end
+  end
+
+  # avoid race condition between presence track and get_members
+  def handle_info(:send_initial_state, socket) do
+    push(
+      socket,
+      "existing_members",
+      ThexrWeb.Space.Manager.get_members(socket.assigns.manager_pid)
+    )
+
+    push(socket, "snapshot", ThexrWeb.Space.Manager.get_snapshot(socket.assigns.space_id))
+
+    # test to see if we receive some kind of message when the genserver timesout
+    Process.monitor(socket.assigns.manager_pid)
+    {:noreply, socket}
   end
 
   # the moniter

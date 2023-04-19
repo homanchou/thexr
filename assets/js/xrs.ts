@@ -15,6 +15,7 @@ import { SystemTransform } from "./systems/transform";
 import { SystemXR } from "./systems/xr";
 import { SystemXRFlight } from "./systems/flight";
 import { SystemFloor } from "./systems/floor";
+import { SystemMaterial } from "./systems/material";
 
 type Config = {
   member_id: string;
@@ -68,6 +69,7 @@ export class XRS {
     this.add_system(new SystemXR());
     this.add_system(new SystemXRFlight());
     this.add_system(new SystemFloor());
+    this.add_system(new SystemMaterial());
 
     this.systems.forEach((sys) => sys.init(this));
     for (const [eid, components] of Object.entries(vars.snapshot)) {

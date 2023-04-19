@@ -63,6 +63,7 @@ export class ServiceEngine {
     this.free_camera.angularSensibility = 500;
     this.free_camera.minZ = 0.1;
     this.free_camera.rotationQuaternion = new BABYLON.Quaternion();
+    this.free_camera.position.fromArray([0, 1.6, 0]);
 
     fromBabylonObservable(
       this.free_camera.onViewMatrixChangedObservable

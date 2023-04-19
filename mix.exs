@@ -68,7 +68,7 @@ defmodule Thexr.MixProject do
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
       "assets.deploy": [
-        "cmd npm --prefix assets run deploy",
+        "cmd npm --prefix assets run build",
         "tailwind default --minify",
         "phx.digest"
       ]

@@ -49,4 +49,7 @@ export class ServiceStore {
       this.state[entity_id][component_name] !== undefined
     );
   }
+  get_component(entity_id: string, component_name: string) {
+    return this.state[entity_id] && this.state[entity_id][component_name];
+  }
 }

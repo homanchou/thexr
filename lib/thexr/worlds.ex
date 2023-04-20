@@ -64,7 +64,21 @@ defmodule Thexr.Worlds do
       pid,
       %{
         "eid" => "cylinder",
-        "set" => %{"shape" => "cylinder", "pos" => [0, 0.5, 3], "color" => "#FF0000"}
+        "set" => %{"shape" => "cylinder", "pos" => [0, 2, 3], "color" => "#FF0000"}
+      },
+      nil
+    )
+
+    ThexrWeb.Space.Manager.process_event(
+      pid,
+      %{
+        "eid" => "bx",
+        "set" => %{
+          "shape" => "box",
+          "pos" => [-2, 1.2, 0],
+          "color" => "#FF00FF",
+          "holdable" => nil
+        }
       },
       nil
     )

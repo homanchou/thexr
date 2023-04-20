@@ -1,6 +1,8 @@
 import * as BABYLON from "babylonjs";
+import { pipe, scan, filter, map } from "rxjs";
 
 import { Observable } from "rxjs/internal/Observable";
+import { PosRot } from "../services/bus";
 /**
  * Wraps a Babylon Observable into an rxjs Observable
  *
@@ -62,3 +64,56 @@ export const camPosRot = (cam: BABYLON.Camera) => {
     rot: cam.absoluteRotation.asArray().map((v) => truncate(v)),
   };
 };
+
+// it gets the values you would have gotten after calling 'setParent' temporarily on something
+export const getSetParentValues = (
+  child: BABYLON.TransformNode,
+  parent: BABYLON.Node
+) => {
+  // save the current pos, rot, scale, parent
+  const currentPos = child.position.asArray();
+  const currentRot = child.rotationQuaternion?.asArray() as number[];
+  const currentScale = child.scaling.asArray();
+  const currentParent = child.parent;
+  // set a new parent temporarily, keeping child where it is relative to the new parent
+  child.setParent(parent);
+  // so we can easily get the child's offset relative to the temp parent
+  const newPos = child.position.asArray();
+  const newRot = child.rotationQuaternion?.asArray();
+  const newScale = child.scaling.asArray();
+
+  // then return the old parent and all the old values
+  child.parent = currentParent;
+  child.position.fromArray(currentPos);
+  child.rotationQuaternion!.copyFromFloats(
+    currentRot[0],
+    currentRot[1],
+    currentRot[2],
+    currentRot[3]
+  );
+  child.scaling.fromArray(currentScale);
+
+  return { pos: newPos, rot: newRot, scaling: newScale };
+};
+
+export function throttleByMovement(movementDelta: number) {
+  return pipe(
+    scan(
+      (acc, curPosRot: PosRot) => {
+        const newSum =
+          curPosRot.pos[0] +
+          curPosRot.pos[1] +
+          curPosRot.pos[2] +
+          curPosRot.rot[0] +
+          curPosRot.rot[1] +
+          curPosRot.rot[2] +
+          curPosRot.rot[3];
+        const diff = Math.abs(acc.sum - newSum);
+        return { diff: diff, sum: newSum, posRot: curPosRot };
+      },
+      { diff: 0, sum: 0, posRot: { pos: [0, 0, 0], rot: [0, 0, 0, 1] } }
+    ),
+    filter((data) => data.diff > movementDelta),
+    map((data) => data.posRot)
+  );
+}

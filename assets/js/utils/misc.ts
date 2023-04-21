@@ -33,7 +33,7 @@ export function fromBabylonObservable<T>(
   });
 }
 
-export function truncate(number, places = 5) {
+export function truncate(number, places = 3) {
   var shift = Math.pow(10, places);
 
   return ((number * shift) | 0) / shift;
@@ -96,24 +96,28 @@ export const getSetParentValues = (
   return { pos: newPos, rot: newRot, scaling: newScale };
 };
 
-export function throttleByMovement(movementDelta: number) {
+export function throttleByMovement() {
   return pipe(
     scan(
-      (acc, curPosRot: PosRot) => {
-        const newSum =
-          curPosRot.pos[0] +
-          curPosRot.pos[1] +
-          curPosRot.pos[2] +
-          curPosRot.rot[0] +
-          curPosRot.rot[1] +
-          curPosRot.rot[2] +
-          curPosRot.rot[3];
-        const diff = Math.abs(acc.sum - newSum);
-        return { diff: diff, sum: newSum, posRot: curPosRot };
+      (acc: any, input: PosRot) => {
+        return { prev: acc.curr, curr: input };
       },
-      { diff: 0, sum: 0, posRot: { pos: [0, 0, 0], rot: [0, 0, 0, 1] } }
+      {
+        prev: { pos: [0, 0, 0], rot: [0, 0, 0, 1] },
+        curr: { pos: [0, 0, 0], rot: [0, 0, 0, 1] },
+      }
     ),
-    filter((data) => data.diff > movementDelta),
-    map((data) => data.posRot)
+
+    filter(
+      (acc: { prev: PosRot; curr: PosRot }) =>
+        acc.prev.pos[2] != acc.curr.pos[2] ||
+        acc.prev.rot[3] != acc.prev.rot[3] ||
+        acc.prev.pos[1] != acc.curr.pos[1] ||
+        acc.prev.pos[0] != acc.curr.pos[0] ||
+        acc.prev.rot[0] != acc.curr.rot[0] ||
+        acc.prev.rot[1] != acc.curr.rot[1] ||
+        acc.prev.rot[2] != acc.curr.rot[2]
+    ),
+    map((data) => data.curr)
   );
 }

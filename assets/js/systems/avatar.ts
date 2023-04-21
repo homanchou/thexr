@@ -1,5 +1,5 @@
 import { XRS } from "../xrs";
-import { throttleTime } from "rxjs/operators";
+import { map, mergeWith, throttleTime } from "rxjs/operators";
 import * as BABYLON from "babylonjs";
 import { PosRot, ServiceBus } from "../services/bus";
 import { throttleByMovement } from "../utils/misc";
@@ -8,23 +8,29 @@ export class SystemAvatar {
   name = "avatar";
   xrs: XRS;
   avatars: { [member_id: string]: Avatar } = {};
+  bus: ServiceBus;
   init(xrs: XRS) {
     this.xrs = xrs;
-
-    this.xrs.services.bus.entered_space.subscribe(() => {
+    this.bus = this.xrs.services.bus;
+    // change this to after channel connected
+    this.bus.entered_space.subscribe(() => {
+      // TODO, move this line to broker, no reason why avatar should connect the channel
       this.xrs.services.broker.create_channel();
+
+      this.start_sending_avatar_movement();
+
       // start sending head movement after we have joined
-      this.xrs.services.bus.head_movement
-        .pipe(throttleTime(50))
-        .pipe(throttleByMovement(0.005))
-        .subscribe(({ pos, rot }) => {
-          this.xrs.services.broker.channel.push("imoved", {
-            head: { pos, rot },
-          });
-        });
+      // this.xrs.services.bus.head_movement
+      //   .pipe(throttleTime(50))
+      //   .pipe(throttleByMovement( ))
+      //   .subscribe(({ pos, rot }) => {
+      //     this.xrs.services.broker.channel.push("imoved", {
+      //       head: { pos, rot },
+      //     });
+      //   });
     });
 
-    this.xrs.services.bus.on_set(["avatar"]).subscribe((cmd) => {
+    this.bus.on_set(["avatar"]).subscribe((cmd) => {
       console.log("creating avatar");
       // let mesh = this.xrs.services.engine.scene.getMeshByName(cmd.eid);
       // if (!mesh) {
@@ -37,7 +43,7 @@ export class SystemAvatar {
       }
     });
 
-    this.xrs.services.bus.on_del(["avatar"]).subscribe((cmd) => {
+    this.bus.on_del(["avatar"]).subscribe((cmd) => {
       // let mesh = this.xrs.services.engine.scene.getMeshByName(cmd.eid);
       // mesh?.dispose();
       const avatar = this.avatars[cmd.eid];
@@ -47,8 +53,7 @@ export class SystemAvatar {
       delete this.avatars[cmd.eid];
     });
 
-    this.xrs.services.bus.on_set(["avatar_pose"]).subscribe((cmd) => {
-      return;
+    this.bus.on_set(["avatar_pose"]).subscribe((cmd) => {
       // const mesh = this.xrs.services.engine.scene.getMeshByName(cmd.eid);
       // if (mesh) {
       //   mesh.position.fromArray(cmd.set?.avatar_pose.head.pos);
@@ -61,6 +66,61 @@ export class SystemAvatar {
         avatar.pose(cmd.set?.avatar_pose);
       }
     });
+  }
+
+  start_sending_avatar_movement() {
+    const payload: {
+      left: PosRot | null;
+      right: PosRot | null;
+      head: PosRot | null;
+    } = {
+      left: null,
+      right: null,
+      head: null,
+    };
+
+    this.bus.exiting_xr.subscribe(() => {
+      payload.left = null;
+      payload.right = null;
+    });
+
+    const leftMovement$ = this.bus.left_hand_moved.pipe(
+      throttleTime(25),
+      throttleByMovement()
+    );
+
+    leftMovement$.subscribe((left) => {
+      payload.left = left;
+    });
+
+    const rightMovement$ = this.bus.right_hand_moved.pipe(
+      throttleTime(25),
+      throttleByMovement()
+    );
+
+    rightMovement$.subscribe((right) => {
+      payload.right = right;
+    });
+
+    const camMovement$ = this.bus.head_movement.pipe(
+      throttleTime(25),
+      throttleByMovement()
+    );
+
+    camMovement$.subscribe((cam) => {
+      payload.head = cam;
+    });
+
+    // merge with combines independent events into one stream, payloads are joined as a side-effect outside of pipe
+    camMovement$
+      .pipe(mergeWith(leftMovement$, rightMovement$), throttleTime(50))
+      .subscribe(() => {
+        if (!payload.head) {
+          return;
+        }
+
+        this.xrs.services.broker.channel.push("imoved", payload);
+      });
   }
 }
 

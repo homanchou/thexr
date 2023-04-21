@@ -56,8 +56,8 @@ export class ServiceBus {
   }>();
 
   // continuous movements
-  public left_hand_moved = new Subject<{ PosRot }>();
-  public right_hand_moved = new Subject<{ PosRot }>();
+  public left_hand_moved = new Subject<PosRot>();
+  public right_hand_moved = new Subject<PosRot>();
 
   public left_trigger = new Subject<xrComponentChange>();
   public left_squeeze = new Subject<xrComponentChange>();

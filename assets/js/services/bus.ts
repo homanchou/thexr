@@ -17,6 +17,20 @@ export type xrComponentChange = {
 
 export class ServiceBus {
   public xrs: XRS;
+  public animate_translate = new Subject<{
+    target: BABYLON.TransformNode;
+    from: BABYLON.Vector3;
+    to: BABYLON.Vector3;
+    duration: number;
+    callback?: () => void;
+  }>();
+  public animate_rotation = new Subject<{
+    target: BABYLON.TransformNode;
+    from: BABYLON.Quaternion;
+    to: BABYLON.Quaternion;
+    duration: number;
+    callback?: () => void;
+  }>();
   public incoming_commands = new Subject<Command>();
   public head_movement = new Subject<PosRot>();
   // left movement, right movement

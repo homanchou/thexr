@@ -1,5 +1,6 @@
 import { Socket, Channel } from "phoenix";
 import { Command, XRS } from "../xrs";
+import { SystemLogger } from "../systems/logger";
 
 const INTERVAL = 100; // ms
 
@@ -129,6 +130,7 @@ export class ServiceBroker {
     //   }
     // );
 
+    // todo there could be a bug here, if you get temp disconnect
     this.channel.on("snapshot", (snapshot: { [eid: string]: any }) => {
       // clear the stage
       this.xrs.services.engine.scene.lights.forEach((l) => l.dispose());
@@ -137,6 +139,11 @@ export class ServiceBroker {
       for (const [eid, components] of Object.entries(snapshot)) {
         this.xrs.handle_command({ eid: eid, set: components });
       }
+      //temp
+      const logger = this.xrs.systems.find(
+        (s) => s.name === "logger"
+      ) as SystemLogger;
+      logger.createLogGui();
     });
 
     this.channel.on("server_lost", () => {

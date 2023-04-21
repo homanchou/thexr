@@ -77,7 +77,7 @@ defmodule Thexr.Worlds do
           "shape" => "box",
           "pos" => [-2, 1.2, 0],
           "color" => "#FF00FF",
-          "holdable" => nil
+          "holdable" => %{}
         }
       },
       nil

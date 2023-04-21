@@ -1,4 +1,13 @@
-import { filter, map, Observable, race, take, Subscription, mapTo } from "rxjs";
+import {
+  filter,
+  map,
+  Observable,
+  race,
+  take,
+  Subscription,
+  mapTo,
+  tap,
+} from "rxjs";
 import * as BABYLON from "babylonjs";
 import type { SystemXR } from "./xr";
 import type { XRS } from "../xrs";
@@ -156,10 +165,12 @@ export class SystemHoldable {
 
   parentAvatarHandsToGripWheneverControllersAreOnline() {
     this.bus.controller_ready.subscribe(({ hand, grip }) => {
+      console.log("the hand controller ready", hand);
       const nodeName = `${this.xrs.config.member_id}_avatar_${hand}_transform`;
       const node = this.scene.getTransformNodeByName(
         nodeName
       ) as BABYLON.TransformNode;
+      console.log("the hand transfrom is", node?.name);
 
       // return everything the way it was after we're done
       const prevParent = node.parent;
@@ -187,8 +198,10 @@ export class SystemHoldable {
   }
 
   detectMeshGrab(hand: "left" | "right") {
+    console.log("registering detect mesh grab", hand);
     this.bus[`${hand}_grip_squeezed`]
       .pipe(
+        tap((v) => console.log(v)),
         map((inputSource) => {
           return this.findGrabbableMesh(
             hand,
@@ -209,6 +222,7 @@ export class SystemHoldable {
     hand: "left" | "right",
     handMatrix: BABYLON.Matrix
   ): BABYLON.AbstractMesh | null {
+    console.log("in find grabbable mesh");
     const multiplier = hand[0] === "l" ? 1 : -1;
 
     const rayParams = [

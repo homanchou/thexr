@@ -13,10 +13,12 @@ import { SystemSequencer } from "./systems/sequencer";
 import { SystemLighting } from "./systems/lighting";
 import { SystemTransform } from "./systems/transform";
 import { SystemXR } from "./systems/xr";
-import { SystemXRFlight } from "./systems/flight";
+import { SystemXRFlight } from "./systems/xr-flight";
 import { SystemFloor } from "./systems/floor";
 import { SystemMaterial } from "./systems/material";
 import { SystemHoldable } from "./systems/holdable";
+import { SystemLogger } from "./systems/logger";
+import { SystemAnimate } from "./systems/animate";
 
 type Config = {
   member_id: string;
@@ -72,8 +74,11 @@ export class XRS {
     this.add_system(new SystemFloor());
     this.add_system(new SystemMaterial());
     this.add_system(new SystemHoldable());
+    this.add_system(new SystemLogger());
+    this.add_system(new SystemAnimate());
 
     this.systems.forEach((sys) => sys.init(this));
+
     for (const [eid, components] of Object.entries(vars.snapshot)) {
       this.handle_command({ eid: eid, set: components });
     }

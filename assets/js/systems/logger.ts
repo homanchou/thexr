@@ -73,6 +73,10 @@ export class SystemLogger {
   }
 
   createLogGui() {
+    // don't create twice
+    if (this.scene.getMeshByName("logger-plane")) {
+      return;
+    }
     this.logPlane = BABYLON.MeshBuilder.CreatePlane(
       "logger-plane",
       {

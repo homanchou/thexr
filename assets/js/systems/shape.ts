@@ -4,10 +4,15 @@ import * as BABYLON from "babylonjs";
 export class SystemShape {
   public xrs: XRS;
   public name = "shape";
+  public scene: BABYLON.Scene;
   init(xrs: XRS) {
     this.xrs = xrs;
+    this.scene = this.xrs.services.engine.scene;
     this.xrs.services.bus.on_set(["shape"]).subscribe((cmd) => {
-      const scene = this.xrs.services.engine.scene;
+      // don't double create
+      if (this.scene.getMeshByName(cmd.eid)) {
+        return;
+      }
       const shape = cmd.set!["shape"] as string;
       const shape_params = cmd.set!["shape_params"] || {};
       if (

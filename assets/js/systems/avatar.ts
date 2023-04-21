@@ -2,6 +2,7 @@ import { XRS } from "../xrs";
 import { throttleTime } from "rxjs/operators";
 import * as BABYLON from "babylonjs";
 import { PosRot, ServiceBus } from "../services/bus";
+import { throttleByMovement } from "../utils/misc";
 
 export class SystemAvatar {
   name = "avatar";
@@ -15,6 +16,7 @@ export class SystemAvatar {
       // start sending head movement after we have joined
       this.xrs.services.bus.head_movement
         .pipe(throttleTime(50))
+        .pipe(throttleByMovement(0.005))
         .subscribe(({ pos, rot }) => {
           this.xrs.services.broker.channel.push("imoved", {
             head: { pos, rot },
@@ -23,16 +25,15 @@ export class SystemAvatar {
     });
 
     this.xrs.services.bus.on_set(["avatar"]).subscribe((cmd) => {
-      if (cmd.eid !== this.xrs.config.member_id) {
-        // let mesh = this.xrs.services.engine.scene.getMeshByName(cmd.eid);
-        // if (!mesh) {
-        //   mesh = BABYLON.MeshBuilder.CreateBox(cmd.eid, {});
-        // }
-        let avatar = this.avatars[cmd.eid];
-        if (!avatar) {
-          avatar = new Avatar(cmd.eid, this.xrs);
-          this.avatars[cmd.eid] = avatar;
-        }
+      console.log("creating avatar");
+      // let mesh = this.xrs.services.engine.scene.getMeshByName(cmd.eid);
+      // if (!mesh) {
+      //   mesh = BABYLON.MeshBuilder.CreateBox(cmd.eid, {});
+      // }
+      let avatar = this.avatars[cmd.eid];
+      if (!avatar) {
+        avatar = new Avatar(cmd.eid, this.xrs);
+        this.avatars[cmd.eid] = avatar;
       }
     });
 
@@ -47,6 +48,7 @@ export class SystemAvatar {
     });
 
     this.xrs.services.bus.on_set(["avatar_pose"]).subscribe((cmd) => {
+      return;
       // const mesh = this.xrs.services.engine.scene.getMeshByName(cmd.eid);
       // if (mesh) {
       //   mesh.position.fromArray(cmd.set?.avatar_pose.head.pos);

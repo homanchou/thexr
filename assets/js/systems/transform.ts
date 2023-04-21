@@ -43,5 +43,35 @@ export class SystemTransform {
       const entity = this.scene.getMeshByName(cmd.eid) as BABYLON.TransformNode;
       entity.scaling.fromArray(cmd.set!.scale);
     });
+
+    this.xrs.services.bus.on_del(["parent"]).subscribe((cmd) => {
+      const entity = this.scene.getMeshByName(cmd.eid);
+      if (entity) {
+        entity.parent = null;
+      }
+    });
+
+    this.xrs.services.bus.on_set(["parent"]).subscribe((cmd) => {
+      const entity = this.scene.getMeshByName(cmd.eid);
+      if (!entity) {
+        return;
+      }
+      // if already parented to this entity, there is nothing to do
+      if (entity.parent?.name === cmd.eid) {
+        return;
+      }
+
+      // either a transform or another mesh
+      const parent =
+        this.scene.getTransformNodeByName(cmd.set?.parent) ||
+        this.scene.getMeshByName(cmd.set?.parent);
+
+      // parenting fights with imposters, so remove the imposter if this was just thrown
+      if (entity.physicsImpostor) {
+        entity.physicsImpostor.dispose();
+        entity.physicsImpostor = null;
+      }
+      entity.parent = parent;
+    });
   }
 }

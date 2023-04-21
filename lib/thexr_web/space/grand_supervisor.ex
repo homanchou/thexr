@@ -26,7 +26,14 @@ defmodule ThexrWeb.Space.GrandSupervisor do
   #   end
   # end
 
-  def stop_space(pid) do
+  def stop_space(pid) when is_pid(pid) do
     DynamicSupervisor.terminate_child(__MODULE__, pid)
+  end
+
+  def stop_space(space_id) do
+    case ThexrWeb.Space.Manager.get_pid(space_id) do
+      nil -> {:error, :not_found}
+      pid -> :sys.get_state(pid).sup_pid |> stop_space()
+    end
   end
 end

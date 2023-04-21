@@ -12,6 +12,7 @@ export class SystemAnimate {
   public animatables: Record<string, BABYLON.Nullable<BABYLON.Animatable>> = {};
   init(xrs: XRS) {
     this.xrs = xrs;
+    this.bus = this.xrs.services.bus;
     this.scene = this.xrs.services.engine.scene;
     this.bus.animate_translate.subscribe((req) => {
       let target = req.target;

@@ -53,6 +53,7 @@ export class SystemHoldable {
     mesh: BABYLON.AbstractMesh,
     hand: "left" | "right"
   ) {
+    console.log("attempting to parent mesh into hand");
     const handNode = this[`${hand}HandNode`];
     const offset = this.xrs.services.store.get_component(mesh.name, "offset");
     let payload = {};
@@ -72,7 +73,7 @@ export class SystemHoldable {
     }
 
     // tell everyone (and ourselves) you grabbed it
-
+    console.log("sending payload", mesh.name, payload);
     this.xrs.send_command({ eid: mesh.name, set: payload });
 
     // this.context.signalHub.outgoing.emit("components_upserted", {
@@ -170,7 +171,10 @@ export class SystemHoldable {
       const node = this.scene.getTransformNodeByName(
         nodeName
       ) as BABYLON.TransformNode;
-      console.log("the hand transfrom is", node?.name);
+      if (!node) {
+        console.error(`no transform node for ${hand}`);
+        return;
+      }
 
       // return everything the way it was after we're done
       const prevParent = node.parent;
@@ -201,7 +205,6 @@ export class SystemHoldable {
     console.log("registering detect mesh grab", hand);
     this.bus[`${hand}_grip_squeezed`]
       .pipe(
-        tap((v) => console.log(v)),
         map((inputSource) => {
           return this.findGrabbableMesh(
             hand,
@@ -211,6 +214,7 @@ export class SystemHoldable {
         filter((result) => result !== null)
       )
       .subscribe((foundMesh) => {
+        console.log("ok we found a mesh to hold", foundMesh!.name);
         // emit that we grabbed a mesh
         this.bus[`${hand}_grip_mesh`].next({
           mesh: foundMesh as BABYLON.AbstractMesh,
@@ -244,22 +248,21 @@ export class SystemHoldable {
         BABYLON.Vector3.FromArray(p2),
         handMatrix
       );
-      // BABYLON.RayHelper.CreateAndShow(
-      //   ray,
-      //   this.xrs.context.scene,
-      //   BABYLON.Color3.Red()
-      // );
+      BABYLON.RayHelper.CreateAndShow(ray, this.scene, BABYLON.Color3.Red());
 
       const pickInfo = this.scene.pickWithRay(ray) as BABYLON.PickingInfo;
       if (
+        pickInfo.pickedMesh &&
         this.xrs.services.store.has_component(
           pickInfo.pickedMesh!.name,
           "holdable"
         )
       ) {
+        console.log("found holdable");
         return pickInfo.pickedMesh;
       }
     }
+    console.log("no holdable found");
     return null;
   }
 }

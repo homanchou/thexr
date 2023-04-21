@@ -132,10 +132,6 @@ export class ServiceBroker {
 
     // todo there could be a bug here, if you get temp disconnect
     this.channel.on("snapshot", (snapshot: { [eid: string]: any }) => {
-      // clear the stage
-      this.xrs.services.engine.scene.lights.forEach((l) => l.dispose());
-      this.xrs.services.engine.scene.meshes.forEach((m) => m.dispose());
-
       for (const [eid, components] of Object.entries(snapshot)) {
         this.xrs.handle_command({ eid: eid, set: components });
       }

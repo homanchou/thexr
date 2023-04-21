@@ -162,6 +162,7 @@ export class SystemXR {
   }
 
   initController(inputSource: BABYLON.WebXRInputSource) {
+    console.log("in init controller");
     // save left and right input sources so that this system can support
     // querying linear and angular velocity
     const hand = inputSource?.motionController?.handedness;

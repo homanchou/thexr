@@ -72,11 +72,27 @@ defmodule Thexr.Worlds do
     ThexrWeb.Space.Manager.process_event(
       pid,
       %{
-        "eid" => "bx",
+        "eid" => "bx1",
         "set" => %{
           "shape" => "box",
-          "pos" => [-2, 1.2, 0],
+          "shape_params" => %{"size" => 0.3},
+          "pos" => [-1.5, 1.2, 0],
           "color" => "#FF00FF",
+          "holdable" => %{}
+        }
+      },
+      nil
+    )
+
+    ThexrWeb.Space.Manager.process_event(
+      pid,
+      %{
+        "eid" => "bx2",
+        "set" => %{
+          "shape" => "box",
+          "shape_params" => %{"size" => 0.4},
+          "pos" => [1.5, 1.1, 0],
+          "color" => "#0000FF",
           "holdable" => %{}
         }
       },
@@ -143,6 +159,7 @@ defmodule Thexr.Worlds do
   def delete_space(%Space{} = space) do
     Repo.delete(space)
     delete_all_entities(space.id)
+    ThexrWeb.Space.GrandSupervisor.stop_space(space.id)
     {:ok, space}
   end
 

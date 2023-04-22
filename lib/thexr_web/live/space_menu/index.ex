@@ -3,6 +3,8 @@ defmodule ThexrWeb.SpaceMenu.Index do
 
   @impl true
   def mount(_params, %{"member_id" => member_id, "space_id" => space_id}, socket) do
+    space = Thexr.Worlds.get_space!(space_id)
+
     ThexrWeb.Endpoint.subscribe("menuin:#{member_id}")
 
     {:ok,
@@ -11,7 +13,7 @@ defmodule ThexrWeb.SpaceMenu.Index do
        menu_opened: false,
        entered: false,
        member_id: member_id,
-       space_id: space_id
+       space: space
      ), layout: false}
   end
 
@@ -22,7 +24,7 @@ defmodule ThexrWeb.SpaceMenu.Index do
 
   def handle_event("toggle_menu", _, socket) do
     mic =
-      ThexrWeb.Space.Manager.get_members(socket.assigns.space_id)
+      ThexrWeb.Space.Manager.get_members(socket.assigns.space.id)
       |> get_in([socket.assigns.member_id, "mic"])
 
     {:noreply, assign(socket, mic: mic, menu_opened: !socket.assigns.menu_opened)}

@@ -3,7 +3,7 @@ defmodule ThexrWeb.Space.Manager do
 
   import Thexr.Registry, only: [via_tuple: 2]
 
-  @timeout :timer.minutes(5)
+  @timeout :timer.minutes(20)
 
   def start_link([space_id, sup_pid]) do
     GenServer.start_link(__MODULE__, {:ok, sup_pid}, name: via_tuple(:manager, space_id))

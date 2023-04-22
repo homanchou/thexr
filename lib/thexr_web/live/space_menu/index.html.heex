@@ -3,10 +3,10 @@
     <div class="z-20 fixed p-4 border-2 border-red-600 overflow-x-hidden overflow-y-auto inset-0 h-full flex justify-center items-center">
       <div class="border-2 border-green-500 relative p-4 rounded-md flex-col items-center">
         <div class="text-center text-xl">
-          <strong>Title</strong>
+          <strong><%= @space.name %></strong>
         </div>
         <div class="rounded-lg bg-gray-700 lg:max-w-md">
-          Hello, this is the description of the space.  You can have quite a bit of text go here and have mulitple lines of text.
+          <%= @space.description %>
         </div>
         <div class="text-center mt-2">
           <button
@@ -24,22 +24,26 @@
   <% else %>
     <%= if @menu_opened do %>
       <div class="w-6/12 h-full bg-red-300 absolute z-50 bg-opacity-50">
-        <button class="block bg-red-500 absolute right-0 top-0" phx-click="toggle_menu">X</button>
+        <button id="toggle_menu" class="block bg-red-500 absolute right-0 top-0" phx-click="toggle_menu">X</button>
       </div>
     <% else %>
       <div class="w-4 h-2 bg-red-300 absolute z-50 ">
-        <button class="block bg-red-500" phx-click="toggle_menu">Menu</button>
+        <button id="toggle_menu" class="block bg-red-500" phx-click="toggle_menu">Menu</button>
       </div>
     <% end %>
 
-    <%= if @mic == "unmuted" do %>
-      <button class="block bg-blue-500 absolute z-50 top-6" onclick="xrs.toggle_mic()">
-        Mute
-      </button>
-    <% else %>
-      <button class="block bg-gray-500 absolute z-50 top-4" onclick="xrs.toggle_mic()">
-        Muted
-      </button>
-    <% end %>
+    
+    
+
   <% end %>
 <% end %>
+
+<div class="absolute z-50 left-8 mr-8 bottom-12">
+<button class={"block p-2 w-36 #{if @mic == "unmuted", do: "bg-blue-400", else: "bg-gray-500"}"} onclick="xrs.toggle_mic()">
+      <%= if @mic == "unmuted" do %>
+      Mute
+      <% else %>
+      Unmuted
+      <% end %>
+</button>
+</div>

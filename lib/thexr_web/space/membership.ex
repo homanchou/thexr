@@ -114,7 +114,10 @@ defmodule ThexrWeb.Space.Membership do
   def handle_info(:broadcast_all_member_poses, %{should_sync: true} = state) do
     movements =
       Enum.reduce(state.members, %{}, fn {member_id, components}, acc ->
-        Map.put(acc, member_id, Map.get(components, "avatar_pose"))
+        case Map.get(components, "avatar_pose") do
+          nil -> acc
+          pose -> Map.put(acc, member_id, pose)
+        end
       end)
 
     ThexrWeb.Endpoint.broadcast("space:#{state.space_id}", "movements", movements)

@@ -52,6 +52,11 @@ export class SystemTransform {
         this.scene.getTransformNodeByName(cmd.set?.parent) ||
         this.scene.getMeshByName(cmd.set?.parent);
 
+      if (!parent) {
+        // maybe the parent doesn't exist yet, for now, do nothing
+        return;
+      }
+
       // parenting fights with imposters, so remove the imposter if this was just thrown
       if (entity.physicsImpostor) {
         entity.physicsImpostor.dispose();

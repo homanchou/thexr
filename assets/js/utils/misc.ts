@@ -33,7 +33,7 @@ export function fromBabylonObservable<T>(
   });
 }
 
-export function truncate(number, places = 3) {
+export function truncate(number, places = 2) {
   var shift = Math.pow(10, places);
 
   return ((number * shift) | 0) / shift;

@@ -18,24 +18,9 @@ export class SystemAvatar {
       this.xrs.services.broker.create_channel();
 
       this.start_sending_avatar_movement();
-
-      // start sending head movement after we have joined
-      // this.xrs.services.bus.head_movement
-      //   .pipe(throttleTime(50))
-      //   .pipe(throttleByMovement( ))
-      //   .subscribe(({ pos, rot }) => {
-      //     this.xrs.services.broker.channel.push("imoved", {
-      //       head: { pos, rot },
-      //     });
-      //   });
     });
 
     this.bus.on_set(["avatar"]).subscribe((cmd) => {
-      console.log("creating avatar");
-      // let mesh = this.xrs.services.engine.scene.getMeshByName(cmd.eid);
-      // if (!mesh) {
-      //   mesh = BABYLON.MeshBuilder.CreateBox(cmd.eid, {});
-      // }
       let avatar = this.avatars[cmd.eid];
       if (!avatar) {
         avatar = new Avatar(cmd.eid, this.xrs);

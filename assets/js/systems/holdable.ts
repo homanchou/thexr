@@ -53,7 +53,6 @@ export class SystemHoldable {
     mesh: BABYLON.AbstractMesh,
     hand: "left" | "right"
   ) {
-    console.log("attempting to parent mesh into hand");
     const handNode = this[`${hand}HandNode`];
     const offset = this.xrs.services.store.get_component(mesh.name, "offset");
     let payload = {};
@@ -73,7 +72,6 @@ export class SystemHoldable {
     }
 
     // tell everyone (and ourselves) you grabbed it
-    console.log("sending payload", mesh.name, payload);
     this.xrs.send_command({ eid: mesh.name, set: payload });
 
     // this.context.signalHub.outgoing.emit("components_upserted", {
@@ -166,7 +164,6 @@ export class SystemHoldable {
 
   parentAvatarHandsToGripWheneverControllersAreOnline() {
     this.bus.controller_ready.subscribe(({ hand, grip }) => {
-      console.log("the hand controller ready", hand);
       const nodeName = `${this.xrs.config.member_id}_avatar_${hand}_transform`;
       const node = this.scene.getTransformNodeByName(
         nodeName
@@ -202,7 +199,6 @@ export class SystemHoldable {
   }
 
   detectMeshGrab(hand: "left" | "right") {
-    console.log("registering detect mesh grab", hand);
     this.bus[`${hand}_grip_squeezed`]
       .pipe(
         map((inputSource) => {
@@ -214,7 +210,6 @@ export class SystemHoldable {
         filter((result) => result !== null)
       )
       .subscribe((foundMesh) => {
-        console.log("ok we found a mesh to hold", foundMesh!.name);
         // emit that we grabbed a mesh
         this.bus[`${hand}_grip_mesh`].next({
           mesh: foundMesh as BABYLON.AbstractMesh,
@@ -226,7 +221,6 @@ export class SystemHoldable {
     hand: "left" | "right",
     handMatrix: BABYLON.Matrix
   ): BABYLON.AbstractMesh | null {
-    console.log("in find grabbable mesh");
     const multiplier = hand[0] === "l" ? 1 : -1;
 
     const rayParams = [
@@ -258,11 +252,9 @@ export class SystemHoldable {
           "holdable"
         )
       ) {
-        console.log("found holdable");
         return pickInfo.pickedMesh;
       }
     }
-    console.log("no holdable found");
     return null;
   }
 }

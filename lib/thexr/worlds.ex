@@ -249,23 +249,29 @@ defmodule Thexr.Worlds do
   end
 
   def update_snapshot(aggregate, commands) when is_map(aggregate) do
-    Enum.reduce(commands, aggregate, fn cmd, agg ->
+    Enum.reduce(commands, aggregate, fn cmd, aggr ->
       eid = cmd["eid"]
+      operations = Map.delete(cmd, "eid")
 
-      case cmd do
-        %{"ttl" => _} ->
-          Map.delete(agg, eid)
+      Enum.reduce(operations, aggr, fn op, agg ->
+        case op do
+          {"ttl", _} ->
+            Map.delete(agg, eid)
 
-        %{"set" => components} ->
-          prev_components = Map.get(agg, eid, %{})
-          merged_components = Map.merge(prev_components, components)
-          Map.put(agg, eid, merged_components) |> IO.inspect(label: "final agg")
+          {"set", components} ->
+            prev_components = Map.get(agg, eid, %{})
+            merged_components = Map.merge(prev_components, components)
+            Map.put(agg, eid, merged_components) |> IO.inspect(label: "final agg")
 
-        %{"del" => component_names} ->
-          prev_components = Map.get(agg, eid, %{})
-          new_components = Map.drop(prev_components, component_names)
-          Map.put(agg, eid, new_components)
-      end
+          {"del", component_names} ->
+            prev_components = Map.get(agg, eid, %{})
+            new_components = Map.drop(prev_components, component_names)
+            Map.put(agg, eid, new_components)
+
+          {_, _} ->
+            agg
+        end
+      end)
     end)
   end
 
@@ -275,17 +281,23 @@ defmodule Thexr.Worlds do
       ) do
     Enum.each(commands, fn cmd ->
       eid = cmd["eid"]
+      operations = Map.delete(cmd, "eid")
 
-      case cmd do
-        %{"ttl" => _} ->
-          delete_entity(snapshot_id, eid)
+      Enum.each(operations, fn op ->
+        case op do
+          {"ttl", _} ->
+            delete_entity(snapshot_id, eid)
 
-        %{"set" => components} ->
-          upsert_entity(snapshot_id, eid, components)
+          {"set", components} ->
+            upsert_entity(snapshot_id, eid, components)
 
-        %{"del" => component_names} ->
-          delete_components(snapshot_id, eid, component_names)
-      end
+          {"del", component_names} ->
+            delete_components(snapshot_id, eid, component_names)
+
+          {_, _} ->
+            :noop
+        end
+      end)
     end)
   end
 end

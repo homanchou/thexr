@@ -1,7 +1,12 @@
-import { filter, takeUntil, map, distinctUntilChanged, Observable } from "rxjs";
+import { filter, takeUntil, map, distinctUntilChanged, Subject } from "rxjs";
 import type { XRS } from "../xrs";
 import * as BABYLON from "babylonjs";
-import { camPosRot, getPosRot, truncate } from "../utils/misc";
+import {
+  camPosRot,
+  fromBabylonObservable,
+  getPosRot,
+  truncate,
+} from "../utils/misc";
 import { isMobileVR } from "../utils/browser";
 import { ServiceBus } from "../services/bus";
 
@@ -18,10 +23,35 @@ export class SystemXR {
   public xrHelper: BABYLON.WebXRDefaultExperience;
   public controllerPhysicsFeature: BABYLON.WebXRControllerPhysics;
   public teleportation: BABYLON.WebXRMotionControllerTeleportation;
-  // convenience cache
-  public leftInputSource: BABYLON.WebXRInputSource;
-  public rightInputSource: BABYLON.WebXRInputSource;
+
+  public left_controller_added$ = new Subject<BABYLON.WebXRInputSource>();
+  public right_controller_added$ = new Subject<BABYLON.WebXRInputSource>();
+  public left_controller_removed$ = new Subject<BABYLON.WebXRInputSource>();
+  public right_controller_removed$ = new Subject<BABYLON.WebXRInputSource>();
+
   public bus: ServiceBus;
+
+  init(xrs: XRS) {
+    this.xrs = xrs;
+    this.bus = xrs.services.bus;
+    this.scene = xrs.services.engine.scene;
+
+    this.bus.entered_space.subscribe(async () => {
+      this.start();
+    });
+  }
+
+  async start() {
+    // this displays the glasses icon, which we don't want until after the initial modal is dismissed
+    await this.enableWebXRExperience();
+
+    // automatically enter XR mode
+    // this doesn't work without a one time user interaction
+    // that's another reason why start modal is necessary
+    if (isMobileVR()) {
+      this.enterXR();
+    }
+  }
 
   getInputSource(hand: "left" | "right") {
     return this[`${hand}InputSource`];
@@ -45,26 +75,6 @@ export class SystemXR {
     }
     // this system is not ready to return a hand velocity for the requester
     return { av: [0, 0, 0], lv: [0, 0, 0] };
-  }
-
-  init(xrs: XRS) {
-    this.xrs = xrs;
-    this.bus = xrs.services.bus;
-    this.scene = xrs.services.engine.scene;
-
-    this.bus.entered_space.subscribe(async () => {
-      this.start();
-    });
-  }
-
-  async start() {
-    await this.enableWebXRExperience();
-
-    // this doesn't work without a one time user interaction
-    // that's another reason why start modal is necessary
-    if (isMobileVR()) {
-      this.enterXR();
-    }
   }
 
   enterXR() {
@@ -142,85 +152,97 @@ export class SystemXR {
 
     this.setupEmitCameraMovement();
 
-    // setup each controller
+    this.setupHandControllers();
+  }
+
+  setupHandControllers() {
     const xrInput = this.xrHelper.input;
 
-    // triggered once per hand
+    // trap some signals to help us set and tear down
     xrInput.onControllerAddedObservable.add((inputSource) => {
+      console.log("onController added", inputSource.inputSource.handedness);
       inputSource.onMotionControllerInitObservable.add(() => {
-        this.initController(inputSource);
+        if (inputSource.inputSource.handedness[0] === "l") {
+          this.left_controller_added$.next(inputSource);
+        } else {
+          this.right_controller_added$.next(inputSource);
+        }
       });
     });
 
     xrInput.onControllerRemovedObservable.add((inputSource) => {
-      const hand = inputSource?.motionController?.handedness;
-      this[`${hand}InputSource`] = null;
-      this.bus.controller_removed.next({
-        hand: inputSource?.motionController?.handness,
-      });
+      if (inputSource.inputSource.handedness[0] === "l") {
+        this.left_controller_removed$.next(inputSource);
+      } else {
+        this.right_controller_removed$.next(inputSource);
+      }
+    });
+
+    // subscribe and unsubscribe to buttons, axis, movement when controllers are added
+    // and unsubscribe when controllers disappear
+    this.watchController("left");
+    this.watchController("right");
+  }
+
+  watchController(hand: "left" | "right") {
+    const subscriptions = [];
+    this[`${hand}_controller_added$`].subscribe((inputSource) => {
+      // subscribe all the things,
+      // which will themselves deregister when the controller is removed
+      this.setupComponentData(hand, inputSource);
+      this.setupVibration(hand, inputSource);
+      this.setupHandMotionData(hand, inputSource);
+      this.setupCleanPressAndRelease(hand, inputSource);
     });
   }
 
-  initController(inputSource: BABYLON.WebXRInputSource) {
-    console.log("in init controller");
-    // save left and right input sources so that this system can support
-    // querying linear and angular velocity
-    const hand = inputSource?.motionController?.handedness;
-    this[`${hand}InputSource`] = inputSource;
-
-    this.setupComponentData(inputSource);
-    this.setupVibration(inputSource);
-    this.setupHandMotionData(inputSource);
-    this.setupCleanPressAndRelease(inputSource);
-    // new XRGripManager(
-    //   this.member_id,
-    //   this.scene,
-    //   inputSource,
-    //   motionController,
-    //   this.controllerPhysicsFeature.getImpostorForController(inputSource)
-    // );
-    // ,
-    //     (inputSource: BABYLON.WebXRInputSource) => {
-    //         return this.setupSendHandPosRot(inputSource)
-    //     }
-    // )
-  }
-
-  setupHandMotionData(inputSource: BABYLON.WebXRInputSource) {
+  setupHandMotionData(
+    hand: "left" | "right",
+    inputSource: BABYLON.WebXRInputSource
+  ) {
     const motionController = inputSource.motionController;
-    motionController?.onModelLoadedObservable.add((mc) => {
-      // const imposter =
-      //   this.controllerPhysicsFeature.getImpostorForController(inputSource);
+    fromBabylonObservable(motionController!.onModelLoadedObservable)
+      .pipe(takeUntil(this[`${hand}_controller_removed$`]))
+      .subscribe(() => {
+        if (inputSource.grip) {
+          fromBabylonObservable(
+            inputSource.grip.onAfterWorldMatrixUpdateObservable
+          )
+            .pipe(takeUntil(this[`${hand}_controller_removed$`]))
+            .subscribe(() => {
+              const payload: any = getPosRot(inputSource.grip);
+              // payload.lv = imposter.getLinearVelocity().asArray();
+              // payload.av = imposter.getAngularVelocity().asArray();
 
-      inputSource.grip?.onAfterWorldMatrixUpdateObservable.add(() => {
-        const payload: any = getPosRot(inputSource.grip);
-        // payload.lv = imposter.getLinearVelocity().asArray();
-        // payload.av = imposter.getAngularVelocity().asArray();
-
-        this.bus[`${mc.handness as "left" | "right"}_hand_moved`].next(payload);
+              this.bus[`${hand}_hand_moved`].next(payload);
+            });
+        }
+        this.bus.controller_ready.next({
+          hand,
+          grip: inputSource.grip as BABYLON.AbstractMesh,
+        });
       });
-
-      // inform menu service that the controller is ready to bind a menu
-      this.bus.controller_ready.next({
-        hand: motionController.handedness,
-        grip: inputSource.grip as BABYLON.AbstractMesh,
-      });
-    });
   }
 
   setupEmitCameraMovement() {
-    this.xrHelper.baseExperience.camera.onViewMatrixChangedObservable.add(
-      (cam) => {
-        this.bus.head_movement.next(camPosRot(cam));
-      }
-    );
+    fromBabylonObservable(
+      this.xrHelper.baseExperience.camera.onViewMatrixChangedObservable
+    ).subscribe((cam) => {
+      this.bus.head_movement.next(camPosRot(cam));
+    });
   }
 
-  setupVibration(inputSource: BABYLON.WebXRInputSource) {
+  setupVibration(
+    hand: "left" | "right",
+    inputSource: BABYLON.WebXRInputSource
+  ) {
     const motionController = inputSource.motionController;
     let inPulse = false;
     this.bus.pulse
-      .pipe(filter((val) => val.hand === motionController?.handedness))
+      .pipe(
+        takeUntil(this[`${hand}_controller_removed$`]),
+        filter((val) => val.hand === motionController?.handedness)
+      )
       .subscribe(async (val) => {
         if (inPulse) {
           return;
@@ -233,77 +255,50 @@ export class SystemXR {
 
   // produces a noisy stream of every button on the controller
   // for every value 0-100
-  setupComponentData(inputSource: BABYLON.WebXRInputSource) {
+  setupComponentData(
+    hand: "left" | "right",
+    inputSource: BABYLON.WebXRInputSource
+  ) {
     const componentIds = inputSource?.motionController?.getComponentIds() || [];
     componentIds.forEach((componentId) => {
       const webXRComponent =
         inputSource?.motionController?.getComponent(componentId);
       if (webXRComponent) {
-        this.publishChanges(inputSource, webXRComponent);
+        this.publishChanges(hand, inputSource, webXRComponent);
       }
     });
   }
 
   publishChanges(
+    hand: "left" | "right",
     inputSource: BABYLON.WebXRInputSource,
     component: BABYLON.WebXRControllerComponent
   ) {
     //wrap babylon observable in rxjs observable
-    const hand = inputSource?.motionController?.handedness as "left" | "right";
-
-    const componentButtonObservable$ = new Observable<{
-      inputSource: BABYLON.WebXRInputSource;
-      controllerComponent: BABYLON.WebXRControllerComponent;
-    }>((subscriber) => {
-      // wrap the babylonjs observable
-      const babylonObserver = component.onButtonStateChangedObservable.add(
-        (controllerComponent, _state) => {
-          // const payload: xr_component = {
-          //   pressed: state.pressed,
-          //   touched: state.touched,
-          //   value: state.value, // x and y go from -1 to 1, but only when button pressed, not for axis changes
-          //   axes: state.axes,
-          //   id: state.id,
-          // };
-          subscriber.next({ inputSource, controllerComponent });
-        }
-      );
-      return () => {
-        component.onButtonStateChangedObservable.remove(babylonObserver);
-      };
-    });
-
-    componentButtonObservable$
-      .pipe(takeUntil(this.bus.exiting_xr))
+    fromBabylonObservable(component.onButtonStateChangedObservable)
+      .pipe(takeUntil(this[`${hand}_controller_removed$`]))
       .subscribe((xr_button_change_evt) => {
-        this.bus[`${hand}_${component.type}`].next(xr_button_change_evt);
+        this.bus[`${hand}_${component.type}`].next({
+          inputSource,
+          controllerComponent: xr_button_change_evt,
+        });
       });
 
-    const componentAxisObservable$ = new Observable<any>((subscriber) => {
-      // wrap the babylonjs observable
-      const babylonObserver = component.onAxisValueChangedObservable.add(
-        (state) => {
-          subscriber.next(state);
-        }
-      );
-      return () => {
-        component.onAxisValueChangedObservable.remove(babylonObserver);
-      };
-    });
-    componentAxisObservable$
-      .pipe(takeUntil(this.bus.exiting_xr))
+    fromBabylonObservable(component.onAxisValueChangedObservable)
+      .pipe(takeUntil(this[`${hand}_controller_removed$`]))
       .subscribe((axisChange) => {
         this.bus[`${hand}_axes`].next(axisChange);
       });
   }
 
-  setupCleanPressAndRelease(inputSource: BABYLON.WebXRInputSource) {
-    const hand = inputSource?.motionController?.handness as "left" | "right";
+  setupCleanPressAndRelease(
+    hand: "left" | "right",
+    inputSource: BABYLON.WebXRInputSource
+  ) {
     // listen for clean grip and release
-
     this.bus[`${hand}_squeeze`]
       .pipe(
-        takeUntil(this.bus.exiting_xr),
+        takeUntil(this[`${hand}_controller_removed$`]),
         map((val) => val.controllerComponent.pressed),
         distinctUntilChanged()
       )
@@ -317,7 +312,7 @@ export class SystemXR {
 
     this.bus[`${hand}_trigger`]
       .pipe(
-        takeUntil(this.bus.exiting_xr),
+        takeUntil(this[`${hand}_controller_removed$`]),
         map((val) => val.controllerComponent.pressed),
         distinctUntilChanged()
       )
@@ -331,8 +326,7 @@ export class SystemXR {
 
     this.bus[`${hand}_button`]
       .pipe(
-        takeUntil(this.bus.exiting_xr),
-        // map((val) => val.pressed),
+        takeUntil(this[`${hand}_controller_removed$`]),
         distinctUntilChanged(
           (a, b) =>
             a.controllerComponent.pressed === b.controllerComponent.pressed

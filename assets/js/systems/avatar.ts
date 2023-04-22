@@ -2,7 +2,7 @@ import { XRS } from "../xrs";
 import { map, mergeWith, throttleTime } from "rxjs/operators";
 import * as BABYLON from "babylonjs";
 import { PosRot, ServiceBus } from "../services/bus";
-import { throttleByMovement } from "../utils/misc";
+import { setPos, setRot, throttleByMovement } from "../utils/misc";
 
 export class SystemAvatar {
   name = "avatar";
@@ -61,9 +61,11 @@ export class SystemAvatar {
       //     cmd.set?.avatar_pose.head.rot
       //   );
       // }
-      const avatar = this.avatars[cmd.eid];
-      if (avatar) {
-        avatar.pose(cmd.set?.avatar_pose);
+      if (cmd.eid !== this.xrs.config.member_id) {
+        const avatar = this.avatars[cmd.eid];
+        if (avatar) {
+          avatar.pose(cmd.set?.avatar_pose);
+        }
       }
     });
   }
@@ -282,14 +284,27 @@ class Avatar {
   }
 
   pose(p: { head: PosRot; left?: PosRot; right?: PosRot }) {
+    // snap head to this new position and rotation
+    setPos(this.headTransform, p.head.pos);
+    setRot(this.headTransform, p.head.rot);
+    if (p.left) {
+      setPos(this.leftTransform, p.left.pos);
+      setRot(this.leftTransform, p.left.rot);
+    }
+
+    if (p.right) {
+      setPos(this.rightTransform, p.right.pos);
+      setRot(this.rightTransform, p.right.rot);
+    }
+
     // this.stopPreviousAnimations();
     // this.poseMeshUsingPosRot(this.head, avatarComponent.head);
-    this.bus.animate_translate.next({
-      target: this.headTransform,
-      from: this.headTransform.position,
-      to: BABYLON.Vector3.FromArray(p.head.pos),
-      duration: 100,
-    });
+    // this.bus.animate_translate.next({
+    //   target: this.headTransform,
+    //   from: this.headTransform.position,
+    //   to: BABYLON.Vector3.FromArray(p.head.pos),
+    //   duration: 100,
+    // });
 
     // this.signalHub.service.emit("animate_translate", {
     //   target: this.headTransform,

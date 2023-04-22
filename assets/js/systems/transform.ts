@@ -1,3 +1,4 @@
+import { setPos, setRot, setScale } from "../utils/misc";
 import { XRS } from "../xrs";
 import * as BABYLON from "babylonjs";
 export class SystemTransform {
@@ -11,37 +12,22 @@ export class SystemTransform {
     this.xrs.services.bus.on_set(["pos"]).subscribe((cmd) => {
       const entity = this.scene.getMeshByName(cmd.eid);
       if (entity) {
-        entity.position.fromArray(cmd.set?.pos);
+        setPos(entity, cmd.set!.pos);
       }
     });
+
     this.xrs.services.bus.on_set(["rot"]).subscribe((cmd) => {
-      const entity = this.scene.getMeshByName(cmd.eid) as BABYLON.TransformNode;
-      if (cmd.set!.rot!.length === 4) {
-        entity.rotationQuaternion = BABYLON.Quaternion.FromArray(cmd.set!.rot);
-      } else {
-        entity.rotationQuaternion = BABYLON.Quaternion.FromEulerAngles(
-          cmd.set!.rot[0],
-          cmd.set!.rot[1],
-          cmd.set!.rot[2]
-        );
-      }
-    });
-    this.xrs.services.bus.on_set(["rot"]).subscribe((cmd) => {
-      const entity = this.scene.getMeshByName(cmd.eid) as BABYLON.TransformNode;
-      if (cmd.set!.rot!.length === 4) {
-        entity.rotationQuaternion = BABYLON.Quaternion.FromArray(cmd.set!.rot);
-      } else {
-        entity.rotationQuaternion = BABYLON.Quaternion.FromEulerAngles(
-          cmd.set!.rot[0],
-          cmd.set!.rot[1],
-          cmd.set!.rot[2]
-        );
+      const entity = this.scene.getMeshByName(cmd.eid);
+      if (entity) {
+        setRot(entity, cmd.set!.rot);
       }
     });
 
     this.xrs.services.bus.on_set(["scale"]).subscribe((cmd) => {
-      const entity = this.scene.getMeshByName(cmd.eid) as BABYLON.TransformNode;
-      entity.scaling.fromArray(cmd.set!.scale);
+      const entity = this.scene.getMeshByName(cmd.eid);
+      if (entity) {
+        setScale(entity, cmd.set!.scale);
+      }
     });
 
     this.xrs.services.bus.on_del(["parent"]).subscribe((cmd) => {

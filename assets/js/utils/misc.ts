@@ -121,3 +121,21 @@ export function throttleByMovement() {
     map((data) => data.curr)
   );
 }
+
+export const setPos = (entity: BABYLON.TransformNode, pos: number[]) => {
+  entity.position.fromArray(pos);
+};
+export const setRot = (entity: BABYLON.TransformNode, rot: number[]) => {
+  if (rot.length === 4) {
+    entity.rotationQuaternion = BABYLON.Quaternion.FromArray(rot);
+  } else {
+    entity.rotationQuaternion = BABYLON.Quaternion.FromEulerAngles(
+      rot[0],
+      rot[1],
+      rot[2]
+    );
+  }
+};
+export const setScale = (entity: BABYLON.TransformNode, scale: number[]) => {
+  entity.scaling.fromArray(scale);
+};

@@ -242,7 +242,7 @@ export class SystemHoldable {
         BABYLON.Vector3.FromArray(p2),
         handMatrix
       );
-      BABYLON.RayHelper.CreateAndShow(ray, this.scene, BABYLON.Color3.Red());
+      // BABYLON.RayHelper.CreateAndShow(ray, this.scene, BABYLON.Color3.Red());
 
       const pickInfo = this.scene.pickWithRay(ray) as BABYLON.PickingInfo;
       if (

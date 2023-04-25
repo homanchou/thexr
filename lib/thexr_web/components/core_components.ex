@@ -38,6 +38,7 @@ defmodule ThexrWeb.CoreComponents do
   attr :show, :boolean, default: false
   attr :on_cancel, JS, default: %JS{}
   attr :on_confirm, JS, default: %JS{}
+  attr :ignorable, :boolean, default: true
 
   slot :inner_block, required: true
   slot :title
@@ -48,7 +49,11 @@ defmodule ThexrWeb.CoreComponents do
   def modal(assigns) do
     ~H"""
     <div id={@id} phx-mounted={@show && show_modal(@id)} class="relative z-50 hidden">
-      <div id={"#{@id}-bg"} class="fixed inset-0 bg-zinc-50/90 transition-opacity" aria-hidden="true" />
+      <div
+        id={"#{@id}-bg"}
+        class="fixed inset-0 bg-zinc-900/50 transition-opacity"
+        aria-hidden="true"
+      />
       <div
         class="fixed inset-0 overflow-y-auto"
         aria-labelledby={"#{@id}-title"}
@@ -62,16 +67,15 @@ defmodule ThexrWeb.CoreComponents do
             <.focus_wrap
               id={"#{@id}-container"}
               phx-mounted={@show && show_modal(@id)}
-              phx-window-keydown={hide_modal(@on_cancel, @id)}
-              phx-key="escape"
-              phx-click-away={hide_modal(@on_cancel, @id)}
-              class="hidden relative rounded-2xl bg-white p-14 shadow-lg shadow-zinc-700/10 ring-1 ring-zinc-700/10 transition"
+              phx-window-keydown={conditional_hide_modal(@ignorable, @on_cancel, @id)}
+              phx-click-away={conditional_hide_modal(@ignorable, @on_cancel, @id)}
+              class="hidden relative rounded-2xl bg-indigo-900 p-14 shadow-lg shadow-zinc-700/10 ring-1 ring-zinc-700/10 transition"
             >
-              <div class="absolute top-6 right-5">
+              <div :if={@ignorable} class="absolute top-6 right-6">
                 <button
                   phx-click={hide_modal(@on_cancel, @id)}
                   type="button"
-                  class="-m-3 flex-none p-3 opacity-20 hover:opacity-40"
+                  class="-m-3 flex-none p-2 opacity-20 hover:opacity-40"
                   aria-label={gettext("close")}
                 >
                   <Heroicons.x_mark solid class="h-5 w-5 stroke-current" />
@@ -79,15 +83,15 @@ defmodule ThexrWeb.CoreComponents do
               </div>
               <div id={"#{@id}-content"}>
                 <header :if={@title != []}>
-                  <h1 id={"#{@id}-title"} class="text-lg font-semibold leading-8 text-zinc-800">
+                  <h1 id={"#{@id}-title"} class="text-lg font-semibold leading-8 text-blue-600">
                     <%= render_slot(@title) %>
                   </h1>
-                  <p :if={@subtitle != []} class="mt-2 text-sm leading-6 text-zinc-600">
+                  <p :if={@subtitle != []} class="mt-2 text-sm leading-6 text-blue-800">
                     <%= render_slot(@subtitle) %>
                   </p>
                 </header>
                 <%= render_slot(@inner_block) %>
-                <div :if={@confirm != [] or @cancel != []} class="ml-6 mb-4 flex items-center gap-5">
+                <div :if={@confirm != [] or @cancel != []} class="mt-4 flex justify-evenly gap-2">
                   <.button
                     :for={confirm <- @confirm}
                     id={"#{@id}-confirm"}
@@ -220,8 +224,8 @@ defmodule ThexrWeb.CoreComponents do
     <button
       type={@type}
       class={[
-        "phx-submit-loading:opacity-75 rounded-lg bg-zinc-900 hover:bg-zinc-700 py-2 px-3",
-        "text-sm font-semibold leading-6 text-white active:text-white/80",
+        "phx-submit-loading:opacity-75 rounded-lg bg-purple-600 hover:bg-purple-400 py-2 px-3",
+        "text-sm font-semibold leading-6 text-blue-950 active:text-blue/80",
         @class
       ]}
       {@rest}
@@ -280,7 +284,7 @@ defmodule ThexrWeb.CoreComponents do
     assigns = assign_new(assigns, :checked, fn -> input_equals?(assigns.value, "true") end)
 
     ~H"""
-    <label phx-feedback-for={@name} class="flex items-center gap-4 text-sm leading-6 text-zinc-600">
+    <label phx-feedback-for={@name} class="flex items-center gap-4 text-sm leading-6 text-blue-800">
       <input type="hidden" name={@name} value="false" />
       <input
         type="checkbox"
@@ -303,7 +307,7 @@ defmodule ThexrWeb.CoreComponents do
       <select
         id={@id}
         name={@name}
-        class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-zinc-500 focus:border-zinc-500 sm:text-sm"
+        class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-400 focus:border-blue-400 sm:text-sm"
         multiple={@multiple}
         {@rest}
       >
@@ -325,8 +329,8 @@ defmodule ThexrWeb.CoreComponents do
         class={[
           input_border(@errors),
           "mt-2 block min-h-[6rem] w-full rounded-lg border-zinc-300 py-[7px] px-[11px]",
-          "text-zinc-900 focus:border-zinc-400 focus:outline-none focus:ring-4 focus:ring-zinc-800/5 sm:text-sm sm:leading-6",
-          "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400 phx-no-feedback:focus:ring-zinc-800/5"
+          "text-zinc-900 focus:border-zinc-400 focus:outline-none focus:ring-4 focus:ring-blue-600/5 sm:text-sm sm:leading-6",
+          "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400 phx-no-feedback:focus:ring-blue-600/5"
         ]}
         {@rest}
       >
@@ -350,7 +354,7 @@ defmodule ThexrWeb.CoreComponents do
           input_border(@errors),
           "mt-2 block w-full rounded-lg border-zinc-300 py-[7px] px-[11px]",
           "text-zinc-900 focus:outline-none focus:ring-4 sm:text-sm sm:leading-6",
-          "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400 phx-no-feedback:focus:ring-zinc-800/5"
+          "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400 phx-no-feedback:focus:ring-blue-600/5"
         ]}
         {@rest}
       />
@@ -360,7 +364,7 @@ defmodule ThexrWeb.CoreComponents do
   end
 
   defp input_border([] = _errors),
-    do: "border-zinc-300 focus:border-zinc-400 focus:ring-zinc-800/5"
+    do: "border-zinc-300 focus:border-zinc-400 focus:ring-blue-600/5"
 
   defp input_border([_ | _] = _errors),
     do: "border-rose-400 focus:border-rose-400 focus:ring-rose-400/10"
@@ -373,7 +377,7 @@ defmodule ThexrWeb.CoreComponents do
 
   def label(assigns) do
     ~H"""
-    <label for={@for} class="block text-sm font-semibold leading-6 text-zinc-800">
+    <label for={@for} class="block text-sm font-semibold leading-6 text-blue-600">
       <%= render_slot(@inner_block) %>
     </label>
     """
@@ -406,10 +410,10 @@ defmodule ThexrWeb.CoreComponents do
     ~H"""
     <header class={[@actions != [] && "flex items-center justify-between gap-6", @class]}>
       <div>
-        <h1 class="text-lg font-semibold leading-8 text-zinc-800">
+        <h1 class="text-lg font-semibold leading-8 text-blue-600">
           <%= render_slot(@inner_block) %>
         </h1>
-        <p :if={@subtitle != []} class="mt-2 text-sm leading-6 text-zinc-600">
+        <p :if={@subtitle != []} class="mt-2 text-sm leading-6 text-blue-800">
           <%= render_slot(@subtitle) %>
         </p>
       </div>
@@ -442,17 +446,17 @@ defmodule ThexrWeb.CoreComponents do
     ~H"""
     <div id={@id} class="overflow-y-auto px-4 sm:overflow-visible sm:px-0">
       <table class="mt-11 w-[40rem] sm:w-full">
-        <thead class="text-left text-[0.8125rem] leading-6 text-zinc-500">
+        <thead class="text-left text-[0.8125rem] leading-6 text-blue-400">
           <tr>
             <th :for={col <- @col} class="p-0 pb-4 pr-6 font-normal"><%= col[:label] %></th>
             <th class="relative p-0 pb-4"><span class="sr-only"><%= gettext("Actions") %></span></th>
           </tr>
         </thead>
-        <tbody class="relative divide-y divide-zinc-100 border-t border-zinc-200 text-sm leading-6 text-zinc-700">
+        <tbody class="relative divide-y divide-blue-950 border-t border-blue-800 text-sm leading-6 text-zinc-500">
           <tr
             :for={row <- @rows}
             id={"#{@id}-#{Phoenix.Param.to_param(row)}"}
-            class="relative group hover:bg-zinc-50"
+            class="relative group hover:bg-indigo-900"
           >
             <td
               :for={{col, i} <- Enum.with_index(@col)}
@@ -460,11 +464,11 @@ defmodule ThexrWeb.CoreComponents do
               class={["p-0", @row_click && "hover:cursor-pointer"]}
             >
               <div :if={i == 0}>
-                <span class="absolute h-full w-4 top-0 -left-4 group-hover:bg-zinc-50 sm:rounded-l-xl" />
-                <span class="absolute h-full w-4 top-0 -right-4 group-hover:bg-zinc-50 sm:rounded-r-xl" />
+                <span class="absolute h-full w-4 top-0 -left-4 group-hover:bg-indigo-900 sm:rounded-l-xl" />
+                <span class="absolute h-full w-4 top-0 -right-4 group-hover:bg-indigo-900 sm:rounded-r-xl" />
               </div>
               <div class="block py-4 pr-6">
-                <span class={["relative", i == 0 && "font-semibold text-zinc-900"]}>
+                <span class="relative">
                   <%= render_slot(col, row) %>
                 </span>
               </div>
@@ -473,7 +477,7 @@ defmodule ThexrWeb.CoreComponents do
               <div class="relative whitespace-nowrap py-4 text-right text-sm font-medium">
                 <span
                   :for={action <- @action}
-                  class="relative ml-4 font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
+                  class="relative ml-4 font-semibold leading-6 text-zinc-400 hover:text-fuchsia-500"
                 >
                   <%= render_slot(action, row) %>
                 </span>
@@ -503,9 +507,9 @@ defmodule ThexrWeb.CoreComponents do
   def list(assigns) do
     ~H"""
     <div class="mt-14">
-      <dl class="-my-4 divide-y divide-zinc-100">
+      <dl class="-my-4 divide-y divide-blue-950">
         <div :for={item <- @item} class="flex gap-4 py-4 sm:gap-8">
-          <dt class="w-1/4 flex-none text-[0.8125rem] leading-6 text-zinc-500"><%= item.title %></dt>
+          <dt class="w-1/4 flex-none text-[0.8125rem] leading-6 text-blue-400"><%= item.title %></dt>
           <dd class="text-sm leading-6 text-zinc-700"><%= render_slot(item) %></dd>
         </div>
       </dl>
@@ -580,6 +584,14 @@ defmodule ThexrWeb.CoreComponents do
     |> hide("##{id}-container")
     |> JS.hide(to: "##{id}", transition: {"block", "block", "hidden"})
     |> JS.pop_focus()
+  end
+
+  def conditional_hide_modal(ignoreable, js, id) do
+    if ignoreable do
+      hide_modal(js, id)
+    else
+      js
+    end
   end
 
   @doc """

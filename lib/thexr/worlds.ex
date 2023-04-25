@@ -39,6 +39,11 @@ defmodule Thexr.Worlds do
   def get_space!(id), do: Repo.get!(Space, id)
 
   @doc """
+  Same as get_space! but does not return an error
+  """
+  def get_space(id), do: Repo.get(Space, id)
+
+  @doc """
   Creates a space.
 
   ## Examples
@@ -64,7 +69,12 @@ defmodule Thexr.Worlds do
       pid,
       %{
         "eid" => "cylinder",
-        "set" => %{"shape" => "cylinder", "pos" => [0, 2, 3], "color" => "#FF0000"}
+        "set" => %{
+          "shape" => "cylinder",
+          "pos" => [0, 2, 3],
+          "color" => "#FF0000",
+          "floor" => nil
+        }
       },
       nil
     )
@@ -105,7 +115,7 @@ defmodule Thexr.Worlds do
         "eid" => "ground",
         "set" => %{
           "shape" => "ground",
-          "shape_params" => %{"width" => 10, "height" => 10},
+          "shape_params" => %{"width" => 50, "height" => 50},
           "pos" => [0, 0, 0],
           "floor" => nil,
           "mat" => "grid"

@@ -1,49 +1,58 @@
-<%= if connected?(@socket) do %>
-  <%= if !@entered do %>
-    <div class="z-20 fixed p-4 border-2 border-red-600 overflow-x-hidden overflow-y-auto inset-0 h-full flex justify-center items-center">
-      <div class="border-2 border-green-500 relative p-4 rounded-md flex-col items-center">
-        <div class="text-center text-xl">
-          <strong><%= @space.name %></strong>
-        </div>
-        <div class="rounded-lg bg-gray-700 lg:max-w-md">
-          <%= @space.description %>
-        </div>
-        <div class="text-center mt-2">
-          <button
-            onclick="xrs.entered()"
-            phx-click="enter_space"
-            data-modal-hide="popup-modal"
-            type="button"
-            class="text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center mr-2"
-          >
-            Enter the Space
-          </button>
-        </div>
-      </div>
+<.modal id="welcome_modal" show ignorable={false} on_confirm="console.log('hi')">
+  <:title><%= @space.name %></:title>
+  <:subtitle><%= @space.description %></:subtitle>
+  <:confirm>Enter Space</:confirm>
+</.modal>
+<div
+  :if={!@entered}
+  class="z-20 fixed p-4 bg-black  bg-opacity-50 overflow-x-hidden overflow-y-auto inset-0 h-full flex justify-center items-center"
+>
+  <div class="border-2 border-green-500 relative p-4 rounded-md flex-col items-center bg-green-200">
+    <div class="text-center text-xl text-gray-800">
+      <strong><%= @space.name %></strong>
+    </div>
+    <div class="rounded-lg bg-gray-300 lg:max-w-md p-2">
+      <%= @space.description %>
+    </div>
+    <div class="text-center mt-2">
+      <button
+        :if={connected?(@socket)}
+        onclick="xrs.entered()"
+        phx-click="enter_space"
+        data-modal-hide="popup-modal"
+        type="button"
+        class="text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center mr-2"
+      >
+        Enter the Space
+      </button>
+    </div>
+  </div>
+</div>
+<%= if @entered do %>
+  <%= if @menu_opened do %>
+    <div class="w-6/12 h-full bg-red-300 absolute z-50 bg-opacity-50 border-2 border-red-950">
+      <button
+        id="toggle_menu"
+        class="block bg-red-500 absolute right-0 top-0 px-2"
+        phx-click="toggle_menu"
+      >
+        <Heroicons.x_mark class="h-6 w-6" />
+      </button>
     </div>
   <% else %>
-    <%= if @menu_opened do %>
-      <div class="w-6/12 h-full bg-red-300 absolute z-50 bg-opacity-50">
-        <button id="toggle_menu" class="block bg-red-500 absolute right-0 top-0" phx-click="toggle_menu">X</button>
-      </div>
-    <% else %>
-      <div class="w-4 h-2 bg-red-300 absolute z-50 ">
-        <button id="toggle_menu" class="block bg-red-500" phx-click="toggle_menu">Menu</button>
-      </div>
-    <% end %>
-
-    
-    
-
+    <div class="w-4 h-2 bg-red-300 absolute z-50 ">
+      <button id="toggle_menu" class="block bg-red-500" phx-click="toggle_menu">
+        <Heroicons.bars_3 class="h-10 w-10" />
+      </button>
+    </div>
   <% end %>
-<% end %>
-
-<div class="absolute z-50 left-8 mr-8 bottom-12">
-<button class={"block p-2 w-36 #{if @mic == "unmuted", do: "bg-blue-400", else: "bg-gray-500"}"} onclick="xrs.toggle_mic()">
+  <div class="absolute z-50 left-8 mr-8 bottom-12">
+    <button class="block p-2 bg-gray-400" onclick="xrs.toggle_mic()">
       <%= if @mic == "unmuted" do %>
-      Mute
+        <Heroicons.microphone class="h-10 w-10 fill-green-600" />
       <% else %>
-      Unmuted
+        <Heroicons.microphone class="h-10 w-10 fill-red-800" />
       <% end %>
-</button>
-</div>
+    </button>
+  </div>
+<% end %>

@@ -7,7 +7,7 @@
     <meta name="member-token" content={Phoenix.Token.sign(@conn, "salt", @member_id)} />
 
     <.live_title suffix=" · TheXR.space">
-      <%= assigns[:page_title] || "Thexr" %>
+      <%= assigns[:page_title] || "Extended Reality Experience" %>
     </.live_title>
     <script src="https://cdn.babylonjs.com/ammo.js">
     </script>
@@ -28,7 +28,7 @@
     <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}>
     </script>
   </head>
-  <body class="bg-gray-400 antialiased">
+  <body class="bg-indigo-950 antialiased">
     <%= @inner_content %>
   </body>
 </html>

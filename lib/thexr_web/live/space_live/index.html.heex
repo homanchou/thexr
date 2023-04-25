@@ -7,13 +7,10 @@
   </:actions>
 </.header>
 
-<.table id="spaces" rows={@spaces} row_click={&JS.navigate(~p"/spaces/#{&1}")}>
+<.table id="spaces" rows={@spaces}>
   <:col :let={space} label="Name"><%= space.name %></:col>
   <:col :let={space} label="Description"><%= space.description %></:col>
   <:action :let={space}>
-    <div class="sr-only">
-      <.link navigate={~p"/spaces/#{space}"}>Show</.link>
-    </div>
     <.link patch={~p"/spaces/#{space}/edit"}>Edit</.link>
   </:action>
   <:action :let={space}>

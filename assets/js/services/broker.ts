@@ -9,7 +9,7 @@ export class ServiceBroker {
   public xrs: XRS;
   socket: Socket;
   channel: Channel;
-
+  menu_hook: any;
   init(xrs: XRS) {
     this.xrs = xrs;
   }

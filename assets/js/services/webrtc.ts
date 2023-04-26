@@ -95,10 +95,8 @@ export class ServiceWebRTC {
   }
 
   toggle_mic() {
-    let new_pref = "muted";
-    if (this.i_am_muted()) {
-      new_pref = "unmuted";
-    }
+    const new_pref = this.i_am_muted() ? "unmuted" : "muted";
+
     this.xrs.send_command({
       eid: this.xrs.config.member_id,
       set: { mic: new_pref },

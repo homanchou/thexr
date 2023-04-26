@@ -29,8 +29,16 @@ let memberToken = document
   .querySelector("meta[name='member-token']")
   .getAttribute("content");
 
+const xrs = new XRS();
+window.xrs = xrs;
+
+const Hooks = {
+  menu_hook: xrs.get_menu_hook(),
+};
+
 let liveSocket = new LiveSocket("/live", Socket, {
   params: { _csrf_token: csrfToken, _member_token: memberToken },
+  hooks: Hooks,
 });
 
 // Show progress bar on live navigation and form submits
@@ -39,7 +47,6 @@ window.addEventListener("phx:page-loading-start", (info) =>
   topbar.delayedShow(200)
 );
 window.addEventListener("phx:page-loading-stop", (info) => topbar.hide());
-
 // connect if there are any LiveViews on the page
 liveSocket.connect();
 
@@ -48,7 +55,3 @@ liveSocket.connect();
 // >> liveSocket.enableLatencySim(1000)  // enabled for duration of browser session
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket;
-window.xrs = new XRS();
-
-import { tests } from "./tests/simple";
-window.tests = tests;

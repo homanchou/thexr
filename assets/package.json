@@ -23,6 +23,7 @@
     "phoenix": "file:../deps/phoenix",
     "phoenix_html": "file:../deps/phoenix_html",
     "phoenix_live_view": "file:../deps/phoenix_live_view",
+    "phoenix_typed_hook": "^0.18.2",
     "rxjs": "^7.8.0",
     "tone": "^14.7.77"
   }

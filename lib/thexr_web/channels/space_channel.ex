@@ -4,7 +4,6 @@ defmodule ThexrWeb.SpaceChannel do
 
   @impl true
   def join("space:" <> space_id, _payload, socket) do
-    ThexrWeb.Endpoint.subscribe("menuout:#{socket.assigns.member_id}")
     send(self(), :after_join)
     {:ok, %{"agora_app_id" => System.get_env("AGORA_APP_ID")}, assign(socket, space_id: space_id)}
   end
@@ -31,14 +30,6 @@ defmodule ThexrWeb.SpaceChannel do
   end
 
   def handle_in("ctos", payload, socket) do
-    # TODO: this is a weird one off, but it's to let the menu
-    with true <- socket.assigns.member_id == payload["eid"],
-         %{"set" => %{"mic" => mic}} = payload do
-      ThexrWeb.Endpoint.broadcast("menuin:#{socket.assigns.member_id}", "mic_toggled", %{
-        "mic" => mic
-      })
-    end
-
     ThexrWeb.Space.Manager.process_event(socket.assigns.space_id, payload, self())
     {:noreply, socket}
   end

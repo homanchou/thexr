@@ -29,9 +29,17 @@ export class SystemLogger {
     this.recentLogs = [];
     this.scene = xrs.services.engine.scene;
     this.bus = xrs.services.bus;
+
     this.overRideWindowConsole();
 
     this.trapWindowError();
+
+    this.bus.on_set(["logwall"]).subscribe((cmd) => {
+      this.createLogGui(cmd.eid);
+    });
+    this.bus.on_del(["logwall"]).subscribe(() => {
+      this.removeLogGui();
+    });
   }
 
   trapWindowError() {
@@ -72,13 +80,13 @@ export class SystemLogger {
     this.textBlock = null;
   }
 
-  createLogGui() {
+  createLogGui(eid: string) {
     // don't create twice
-    if (this.scene.getMeshByName("logger-plane")) {
+    if (this.scene.getMeshByName(eid)) {
       return;
     }
     this.logPlane = BABYLON.MeshBuilder.CreatePlane(
-      "logger-plane",
+      eid,
       {
         height: WALL_HEIGHT,
         width: WALL_WIDTH,
@@ -89,8 +97,8 @@ export class SystemLogger {
     this.logPlane.isPickable = false;
     this.logPlane.showBoundingBox = true;
     this.logPlane.position.y = Math.ceil(WALL_HEIGHT / 2);
-    this.logPlane.position.z = 5;
-    this.logPlane.rotation.x = BABYLON.Angle.FromDegrees(-15).radians();
+    // this.logPlane.position.z = 5;
+    // this.logPlane.rotation.x = BABYLON.Angle.FromDegrees(-15).radians();
 
     this.logTexture = GUI.AdvancedDynamicTexture.CreateForMesh(
       this.logPlane,

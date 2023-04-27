@@ -67,6 +67,7 @@ export class XRS {
 
     this.add_system(new SystemAvatar());
     this.add_system(new SystemShape());
+    this.add_system(new SystemLogger());
     this.add_system(new SystemTransform());
     this.add_system(new SystemLighting());
     this.add_system(new SystemSequencer());
@@ -75,7 +76,6 @@ export class XRS {
     this.add_system(new SystemFloor());
     this.add_system(new SystemMaterial());
     this.add_system(new SystemHoldable());
-    this.add_system(new SystemLogger());
     this.add_system(new SystemAnimate());
     this.add_system(new SystemXRMenu());
 

@@ -21,17 +21,16 @@
     }
   </style>
 </div>
-<.modal
+<.unignorable_modal
   :if={!@entered}
   id="welcome_modal"
   show
-  ignorable={false}
   on_confirm={JS.dispatch("enter_space")}
 >
   <:title><%= @space.name %></:title>
   <:subtitle><%= @space.description %></:subtitle>
   <:confirm>Enter Space</:confirm>
-</.modal>
+</.unignorable_modal>
 <%= if @entered do %>
   <.menu menu_state={@menu_state} space={@space} member_id={@member_id} />
 

@@ -14,6 +14,77 @@ defmodule ThexrWeb.CoreComponents do
   alias Phoenix.LiveView.JS
   import ThexrWeb.Gettext
 
+  attr :id, :string, required: true
+  attr :show, :boolean, default: false
+  attr :on_cancel, JS, default: %JS{}
+  attr :on_confirm, JS, default: %JS{}
+
+  slot :inner_block, required: true
+  slot :title
+  slot :subtitle
+  slot :confirm
+  slot :cancel
+
+  def unignorable_modal(assigns) do
+    ~H"""
+    <div id={@id} phx-mounted={@show && show_modal(@id)} class="relative z-50 hidden">
+      <div
+        id={"#{@id}-bg"}
+        class="fixed inset-0 bg-zinc-900/50 transition-opacity"
+        aria-hidden="true"
+      />
+      <div
+        class="fixed inset-0 overflow-y-auto"
+        aria-labelledby={"#{@id}-title"}
+        aria-describedby={"#{@id}-description"}
+        role="dialog"
+        aria-modal="true"
+        tabindex="0"
+      >
+        <div class="flex min-h-full items-center justify-center">
+          <div class="w-full max-w-3xl p-4 sm:p-6 lg:py-8">
+            <.focus_wrap
+              id={"#{@id}-container"}
+              phx-mounted={@show && show_modal(@id)}
+              class="hidden relative rounded-2xl bg-indigo-900 p-14 shadow-lg shadow-zinc-700/10 ring-1 ring-zinc-700/10 transition"
+            >
+              <div id={"#{@id}-content"}>
+                <header :if={@title != []}>
+                  <h1 id={"#{@id}-title"} class="text-lg font-semibold leading-8 text-blue-600">
+                    <%= render_slot(@title) %>
+                  </h1>
+                  <p :if={@subtitle != []} class="mt-2 text-sm leading-6 text-blue-800">
+                    <%= render_slot(@subtitle) %>
+                  </p>
+                </header>
+                <%= render_slot(@inner_block) %>
+                <div :if={@confirm != [] or @cancel != []} class="mt-4 flex justify-evenly gap-2">
+                  <.button
+                    :for={confirm <- @confirm}
+                    id={"#{@id}-confirm"}
+                    phx-click={@on_confirm}
+                    phx-disable-with
+                    class="py-2 px-3"
+                  >
+                    <%= render_slot(confirm) %>
+                  </.button>
+                  <.link
+                    :for={cancel <- @cancel}
+                    phx-click={hide_modal(@on_cancel, @id)}
+                    class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
+                  >
+                    <%= render_slot(cancel) %>
+                  </.link>
+                </div>
+              </div>
+            </.focus_wrap>
+          </div>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
   @doc """
   Renders a modal.
 
@@ -38,7 +109,6 @@ defmodule ThexrWeb.CoreComponents do
   attr :show, :boolean, default: false
   attr :on_cancel, JS, default: %JS{}
   attr :on_confirm, JS, default: %JS{}
-  attr :ignorable, :boolean, default: true
 
   slot :inner_block, required: true
   slot :title
@@ -67,11 +137,12 @@ defmodule ThexrWeb.CoreComponents do
             <.focus_wrap
               id={"#{@id}-container"}
               phx-mounted={@show && show_modal(@id)}
-              phx-window-keydown={conditional_hide_modal(@ignorable, @on_cancel, @id)}
-              phx-click-away={conditional_hide_modal(@ignorable, @on_cancel, @id)}
+              phx-window-keydown={hide_modal(@on_cancel, @id)}
+              phx-key="escape"
+              phx-click-away={hide_modal(@on_cancel, @id)}
               class="hidden relative rounded-2xl bg-indigo-900 p-14 shadow-lg shadow-zinc-700/10 ring-1 ring-zinc-700/10 transition"
             >
-              <div :if={@ignorable} class="absolute top-6 right-6">
+              <div class="absolute top-6 right-6">
                 <button
                   phx-click={hide_modal(@on_cancel, @id)}
                   type="button"

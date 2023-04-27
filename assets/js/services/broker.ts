@@ -148,7 +148,6 @@ export class ServiceBroker {
       const logger = this.xrs.systems.find(
         (s) => s.name === "logger"
       ) as SystemLogger;
-      logger.createLogGui();
     });
 
     this.channel.on("server_lost", () => {

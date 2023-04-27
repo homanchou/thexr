@@ -14,7 +14,7 @@ defmodule ThexrWeb.Space.Manager do
   end
 
   def get_snapshot(space_id) do
-    persisted = Thexr.Worlds.get_entities(space_id)
+    persisted = Thexr.Worlds.get_entities_as_object(space_id)
     state = get_pid(space_id) |> :sys.get_state()
     commands = ThexrWeb.Space.Snapshotter.get_stash(state.snapshotter)
     Thexr.Worlds.update_snapshot(persisted, commands)

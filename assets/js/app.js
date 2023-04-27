@@ -33,7 +33,8 @@ const xrs = new XRS();
 window.xrs = xrs;
 
 const Hooks = {
-  menu_hook: xrs.get_menu_hook(),
+  menu_hook: xrs.services.broker.menu_hook,
+  xrs_hook: xrs.services.broker.xrs_hook,
 };
 
 let liveSocket = new LiveSocket("/live", Socket, {

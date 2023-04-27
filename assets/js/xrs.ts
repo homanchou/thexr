@@ -1,5 +1,3 @@
-import { Hook, makeHook } from "phoenix_typed_hook";
-
 /* services */
 import { ServiceBroker } from "./services/broker";
 import { ServiceEngine } from "./services/engine";
@@ -140,28 +138,5 @@ export class XRS {
 
   add_system(system: ISystem) {
     this.systems.push(system);
-  }
-
-  // this method needs to exist on XRS when initializing phoneix liveview hooks
-  get_menu_hook() {
-    return makeHook(MenuHook);
-  }
-}
-
-class MenuHook extends Hook {
-  xrs: XRS;
-  mounted() {
-    this.xrs = window["xrs"];
-    this.pushEvent("request_vars", {}, (resp) => {
-      this.xrs.init(resp);
-    });
-    window.addEventListener("enter_space", (ev) => {
-      this.xrs.entered();
-      this.pushEvent("enter_space", {});
-    });
-    window.addEventListener("toggle_mic", () => {
-      this.xrs.toggle_mic();
-      this.pushEvent("toggle_mic", {});
-    });
   }
 }

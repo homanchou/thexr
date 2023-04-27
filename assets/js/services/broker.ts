@@ -1,6 +1,7 @@
 import { Socket, Channel } from "phoenix";
 import { Command, XRS } from "../xrs";
 import { SystemLogger } from "../systems/logger";
+import { Hook, makeHook } from "phoenix_typed_hook";
 
 const INTERVAL = 100; // ms
 
@@ -10,6 +11,14 @@ export class ServiceBroker {
   socket: Socket;
   channel: Channel;
   menu_hook: any;
+  xrs_hook: any;
+
+  // these need to be available prior to init call
+  constructor() {
+    this.menu_hook = makeHook(MenuHook);
+    this.xrs_hook = makeHook(XRSHook);
+  }
+
   init(xrs: XRS) {
     this.xrs = xrs;
   }
@@ -153,5 +162,43 @@ export class ServiceBroker {
         this.xrs.services.bus.channel_connected.next(resp);
       })
       .receive("error", (resp) => {});
+  }
+}
+
+// these are hooks for modals, microphone and hiding / showing the menu
+class XRSHook extends Hook {
+  xrs: XRS;
+  mounted() {
+    this.xrs = window["xrs"];
+    console.log("xrs hook mounted");
+    // when we're mounted, make a request to get the initial vars so we can initialize the space
+    this.pushEvent("request_vars", {}, (resp) => {
+      this.xrs.init(resp);
+    });
+    // when user clicks enter space, tell liveview to remove the modal, and
+    // let xrs create an event
+    window.addEventListener("enter_space", (ev) => {
+      this.xrs.entered();
+      this.pushEvent("enter_space", {});
+    });
+    // same
+    window.addEventListener("toggle_mic", () => {
+      this.xrs.toggle_mic();
+      this.pushEvent("toggle_mic", {});
+    });
+  }
+}
+
+// we need a separate hook for what happens inside a menu so that we can
+// subscribe to updates and then re-create the menu in VR
+
+class MenuHook extends Hook {
+  xrs: XRS;
+  mounted() {
+    this.xrs = window["xrs"];
+    console.log("menu mounted");
+  }
+  updated(): void {
+    console.log("menu was updated");
   }
 }

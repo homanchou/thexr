@@ -188,7 +188,17 @@ defmodule Thexr.Worlds do
 
   # entities
 
-  def get_entities(snapshot_id) do
+  def list_entities(snapshot_id) do
+    query =
+      from(e in Entity,
+        select: %{id: e.id, components: e.components},
+        where: e.snapshot_id == ^snapshot_id
+      )
+
+    Repo.all(query)
+  end
+
+  def get_entities_as_object(snapshot_id) do
     query = from(e in Entity, select: {e.id, e.components}, where: e.snapshot_id == ^snapshot_id)
     Repo.all(query) |> Enum.into(%{})
   end
@@ -271,7 +281,7 @@ defmodule Thexr.Worlds do
           {"set", components} ->
             prev_components = Map.get(agg, eid, %{})
             merged_components = Map.merge(prev_components, components)
-            Map.put(agg, eid, merged_components) |> IO.inspect(label: "final agg")
+            Map.put(agg, eid, merged_components)
 
           {"del", component_names} ->
             prev_components = Map.get(agg, eid, %{})

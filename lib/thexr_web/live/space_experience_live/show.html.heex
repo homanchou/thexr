@@ -1,4 +1,4 @@
-<div id="base" phx-update="ignore" phx-hook="menu_hook">
+<div id="xrs_base" phx-update="ignore" phx-hook="xrs_hook">
   <style>
     html, body {
       overflow: hidden;
@@ -33,36 +33,7 @@
   <:confirm>Enter Space</:confirm>
 </.modal>
 <%= if @entered do %>
-  <.menu menu_opened={@menu_opened} />
+  <.menu menu_state={@menu_state} space={@space} member_id={@member_id} />
+
   <.mic_toggle mic={@mic} />
-<% end %>
-<%= if false do %>
-  <%= if @entered do %>
-    <%= if @menu_opened do %>
-      <div class="w-6/12 h-full bg-red-300 absolute z-50 bg-opacity-50 border-2 border-red-950">
-        <button
-          id="toggle_menu"
-          class="block bg-red-500 absolute right-0 top-0 px-2"
-          phx-click="toggle_menu"
-        >
-          <Heroicons.x_mark class="h-6 w-6" />
-        </button>
-      </div>
-    <% else %>
-      <div class="w-4 h-2 bg-red-300 absolute z-50 ">
-        <button id="toggle_menu" class="block bg-red-500" phx-click="toggle_menu">
-          <Heroicons.bars_3 class="h-10 w-10" />
-        </button>
-      </div>
-    <% end %>
-    <div class="absolute z-50 left-8 mr-8 bottom-12">
-      <button class="block p-2 bg-gray-400" onclick="xrs.toggle_mic()">
-        <%= if @mic == "unmuted" do %>
-          <Heroicons.microphone class="h-10 w-10 fill-green-600" />
-        <% else %>
-          <Heroicons.microphone class="h-10 w-10 fill-red-800" />
-        <% end %>
-      </button>
-    </div>
-  <% end %>
 <% end %>

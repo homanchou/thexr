@@ -96,7 +96,7 @@ export const getSetParentValues = (
   return { pos: newPos, rot: newRot, scaling: newScale };
 };
 
-const THRESHOLD = 0.01;
+const THRESHOLD = 0.02;
 
 export function throttleByMovement() {
   return pipe(

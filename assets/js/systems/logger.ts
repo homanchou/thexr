@@ -94,9 +94,9 @@ export class SystemLogger {
       },
       this.scene
     );
-    this.logPlane.isPickable = false;
+    // this.logPlane.isPickable = false;
     this.logPlane.showBoundingBox = true;
-    this.logPlane.position.y = Math.ceil(WALL_HEIGHT / 2);
+    // this.logPlane.position.y = Math.ceil(WALL_HEIGHT / 2);
     // this.logPlane.position.z = 5;
     // this.logPlane.rotation.x = BABYLON.Angle.FromDegrees(-15).radians();
 

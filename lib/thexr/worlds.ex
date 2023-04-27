@@ -73,7 +73,8 @@ defmodule Thexr.Worlds do
           "shape" => "cylinder",
           "pos" => [0, 2, 3],
           "color" => "#FF0000",
-          "floor" => nil
+          "floor" => %{},
+          "holdable" => %{}
         }
       },
       nil

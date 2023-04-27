@@ -24,7 +24,9 @@ defmodule ThexrWeb.Router do
     live "/spaces/:id/edit", SpaceLive.Index, :edit
 
     # live "/spaces/:id", SpaceLive.Show, :show
-    live "/spaces/:id", SpaceExperienceLive.Show
+    # live "/spaces/:id", SpaceExperienceLive.Show
+    get "/spaces/:id", SpaceController, :show
+
     live "/spaces/:id/show/edit", SpaceLive.Show, :edit
 
     get "/test", TestController, :index

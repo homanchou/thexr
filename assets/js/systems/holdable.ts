@@ -242,9 +242,12 @@ export class SystemHoldable {
         BABYLON.Vector3.FromArray(p2),
         handMatrix
       );
-      // BABYLON.RayHelper.CreateAndShow(ray, this.scene, BABYLON.Color3.Red());
+      BABYLON.RayHelper.CreateAndShow(ray, this.scene, BABYLON.Color3.Red());
 
       const pickInfo = this.scene.pickWithRay(ray) as BABYLON.PickingInfo;
+      if (pickInfo.pickedMesh) {
+        console.log("pickedable mesh found");
+      }
       if (
         pickInfo.pickedMesh &&
         this.xrs.services.store.has_component(
@@ -252,9 +255,11 @@ export class SystemHoldable {
           "holdable"
         )
       ) {
+        console.log("found a grabble mesh");
         return pickInfo.pickedMesh;
       }
     }
+    console.log("no grabbable mesh");
     return null;
   }
 }

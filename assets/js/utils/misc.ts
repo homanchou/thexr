@@ -96,6 +96,8 @@ export const getSetParentValues = (
   return { pos: newPos, rot: newRot, scaling: newScale };
 };
 
+const THRESHOLD = 0.01;
+
 export function throttleByMovement() {
   return pipe(
     scan(
@@ -110,13 +112,13 @@ export function throttleByMovement() {
 
     filter(
       (acc: { prev: PosRot; curr: PosRot }) =>
-        acc.prev.pos[2] != acc.curr.pos[2] ||
-        acc.prev.rot[3] != acc.prev.rot[3] ||
-        acc.prev.pos[1] != acc.curr.pos[1] ||
-        acc.prev.pos[0] != acc.curr.pos[0] ||
-        acc.prev.rot[0] != acc.curr.rot[0] ||
-        acc.prev.rot[1] != acc.curr.rot[1] ||
-        acc.prev.rot[2] != acc.curr.rot[2]
+        Math.abs(acc.prev.pos[0] - acc.curr.pos[0]) > THRESHOLD ||
+        Math.abs(acc.prev.rot[0] - acc.curr.rot[0]) > THRESHOLD ||
+        Math.abs(acc.prev.pos[1] - acc.curr.pos[1]) > THRESHOLD ||
+        Math.abs(acc.prev.pos[2] - acc.curr.pos[2]) > THRESHOLD ||
+        Math.abs(acc.prev.rot[1] - acc.curr.rot[1]) > THRESHOLD ||
+        Math.abs(acc.prev.rot[2] - acc.curr.rot[2]) > THRESHOLD ||
+        Math.abs(acc.prev.rot[3] - acc.curr.rot[3]) > THRESHOLD
     ),
     map((data) => data.curr)
   );

@@ -19,6 +19,7 @@ import { SystemMaterial } from "./systems/material";
 import { SystemHoldable } from "./systems/holdable";
 import { SystemLogger } from "./systems/logger";
 import { SystemAnimate } from "./systems/animate";
+import { SystemXRMenu } from "./systems/xr-menu";
 
 type Config = {
   member_id: string;
@@ -76,6 +77,7 @@ export class XRS {
     this.add_system(new SystemHoldable());
     this.add_system(new SystemLogger());
     this.add_system(new SystemAnimate());
+    this.add_system(new SystemXRMenu());
 
     this.systems.forEach((sys) => sys.init(this));
 

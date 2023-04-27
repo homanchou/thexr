@@ -1,4 +1,11 @@
-import { filter, takeUntil, map, distinctUntilChanged, Subject } from "rxjs";
+import {
+  filter,
+  takeUntil,
+  map,
+  distinctUntilChanged,
+  Subject,
+  take,
+} from "rxjs";
 import type { XRS } from "../xrs";
 import * as BABYLON from "babylonjs";
 import {
@@ -9,6 +16,7 @@ import {
 } from "../utils/misc";
 import { isMobileVR } from "../utils/browser";
 import { ServiceBus } from "../services/bus";
+import { SystemAvatar } from "./avatar";
 
 /**
  * Sends all head and controller events into signal hub
@@ -205,6 +213,14 @@ export class SystemXR {
       .pipe(takeUntil(this[`${hand}_controller_removed$`]))
       .subscribe(() => {
         if (inputSource.grip) {
+          //put hand back to the face when this controller leaves XR
+          this[`${hand}_controller_removed$`].pipe(take(1)).subscribe(() => {
+            const systemAvatar = this.xrs.systems.find(
+              (s) => s.name === "avatar"
+            ) as SystemAvatar;
+            systemAvatar.my_avatar().setHandRaisedPosition(hand);
+          });
+
           fromBabylonObservable(
             inputSource.grip.onAfterWorldMatrixUpdateObservable
           )

@@ -38,6 +38,14 @@ defmodule ThexrWeb.SpaceExperienceLive.Show do
     {:noreply, assign(socket, menu_state: new_menu_state)}
   end
 
+  def handle_event("open_menu", _, socket) do
+    {:noreply, assign(socket, menu_state: %{submenu: "about"})}
+  end
+
+  def handle_event("close_menu", _, socket) do
+    {:noreply, assign(socket, menu_state: :closed)}
+  end
+
   def handle_event("select_submenu", %{"submenu" => submenu}, socket) do
     {:noreply, assign(socket, menu_state: %{submenu: submenu})}
   end

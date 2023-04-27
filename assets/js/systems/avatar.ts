@@ -55,6 +55,10 @@ export class SystemAvatar {
     });
   }
 
+  my_avatar() {
+    return this.avatars[this.xrs.config.member_id];
+  }
+
   start_sending_avatar_movement() {
     const payload: {
       left: PosRot | null;
@@ -131,11 +135,10 @@ class Avatar {
     this.createHeadIfNotExist();
 
     this.createHandIfNotExist("left");
-
-    this.setHandRaisedPosition(this.leftTransform, "left");
+    this.setHandRaisedPosition("left");
 
     this.createHandIfNotExist("right");
-    this.setHandRaisedPosition(this.rightTransform, "right");
+    this.setHandRaisedPosition("right");
   }
 
   dispose() {
@@ -200,7 +203,8 @@ class Avatar {
     }
   }
 
-  setHandRaisedPosition(handTransform: BABYLON.TransformNode, hand: string) {
+  setHandRaisedPosition(hand: string) {
+    const handTransform = this[`${hand}Transform`];
     if (handTransform?.parent) {
       return;
     }
@@ -315,12 +319,12 @@ class Avatar {
     if (p.left) {
       this.poseMeshUsingPosRot(this.leftTransform, p.left);
     } else {
-      this.setHandRaisedPosition(this.leftTransform, "left");
+      this.setHandRaisedPosition("left");
     }
     if (p.right) {
       this.poseMeshUsingPosRot(this.rightTransform, p.right);
     } else {
-      this.setHandRaisedPosition(this.rightTransform, "right");
+      this.setHandRaisedPosition("right");
     }
   }
 }

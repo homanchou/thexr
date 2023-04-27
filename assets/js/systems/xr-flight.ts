@@ -1,4 +1,4 @@
-import { filter, type Subscription } from "rxjs";
+import { type Subscription } from "rxjs";
 import type { XRS } from "../xrs";
 import * as BABYLON from "babylonjs";
 import type { SystemXR } from "./xr";
@@ -10,7 +10,6 @@ const GO_FASTER_DAMPENING = 0.2;
 export class SystemXRFlight {
   public xrs: XRS;
   public name = "xr-flight";
-  public order = 20;
   public forwardVelocity = 0;
   public sideVelocity = 0;
   public dampeningFactor = NORMAL_DAMPENING_FACTOR; // slows down the speed to prevent nausea

@@ -46,6 +46,7 @@ export interface ISystem {
 }
 
 export class XRS {
+  public inited = false; // prevent double init
   public config: Config;
   public systems: ISystem[] = [];
   public services = {
@@ -62,6 +63,9 @@ export class XRS {
   }
 
   init(vars: Vars) {
+    if (this.inited) {
+      return;
+    }
     this.config = { member_id: vars.member_id, space_id: vars.space_id };
     Object.values(this.services).forEach((service) => service.init(this));
 
@@ -84,6 +88,7 @@ export class XRS {
     for (const [eid, components] of Object.entries(vars.snapshot)) {
       this.handle_command({ eid: eid, set: components });
     }
+    this.inited = true;
   }
 
   entered() {

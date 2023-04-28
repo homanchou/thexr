@@ -94,6 +94,7 @@ export class SystemLogger {
       },
       this.scene
     );
+    this.logPlane.rotationQuaternion = new BABYLON.Quaternion();
     // this.logPlane.isPickable = false;
     this.logPlane.showBoundingBox = true;
     // this.logPlane.position.y = Math.ceil(WALL_HEIGHT / 2);

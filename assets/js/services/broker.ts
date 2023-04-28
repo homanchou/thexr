@@ -171,9 +171,9 @@ class XRSHook extends Hook {
     this.xrs = window["xrs"];
     console.log("xrs hook mounted");
     // when we're mounted, make a request to get the initial vars so we can initialize the space
-    // this.pushEvent("request_vars", {}, (resp) => {
-    //   this.xrs.init(resp);
-    // });
+    this.pushEvent("request_vars", {}, (resp) => {
+      this.xrs.init(resp);
+    });
     // when user clicks enter space, tell liveview to remove the modal, and
     // let xrs create an event
     window.addEventListener("enter_space", (ev) => {

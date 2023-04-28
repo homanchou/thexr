@@ -1,5 +1,5 @@
 /* services */
-import { ServiceBroker } from "./services/broker";
+import { ServiceBroker, XRSHook } from "./services/broker";
 import { ServiceEngine } from "./services/engine";
 import { ServiceStore } from "./services/store";
 import { ServiceBus } from "./services/bus";
@@ -100,7 +100,10 @@ export class XRS {
   }
 
   send_command(command: Command, send_to_self: boolean = true) {
-    this.services.broker.push(command);
+    // tags with 'p' are private, local entities, like menu or log wall
+    if (command.tag !== "p") {
+      this.services.broker.push(command);
+    }
     if (send_to_self) {
       this.handle_command(command);
     }
@@ -145,5 +148,22 @@ export class XRS {
 
   add_system(system: ISystem) {
     this.systems.push(system);
+  }
+
+  mount_xrs_hooks(hook: XRSHook) {
+    window.addEventListener("enter_space", (ev) => {
+      this.entered();
+      hook.pushEvent("enter_space", {});
+    });
+    window.addEventListener("toggle_mic", () => {
+      this.toggle_mic();
+    });
+    this.services.bus.mic_toggled.subscribe(() => {
+      hook.pushEvent("mic_toggled", {});
+    });
+    window.addEventListener("toggle_logwall", () => {
+      const sys = this.systems.find((s) => s.name === "logger") as SystemLogger;
+      sys.toggle_log_wall();
+    });
   }
 }

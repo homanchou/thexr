@@ -13,6 +13,7 @@ enum LogLevel {
 
 const WALL_HEIGHT = 5;
 const WALL_WIDTH = 20;
+const WALL_EID = "logwall";
 
 export class SystemLogger {
   public name = "logger";
@@ -24,6 +25,7 @@ export class SystemLogger {
   public logTexture: GUI.AdvancedDynamicTexture | null;
   public textBlock: GUI.TextBlock | null;
   public xrs: XRS;
+
   init(xrs: XRS) {
     this.xrs = xrs;
     this.recentLogs = [];
@@ -78,6 +80,26 @@ export class SystemLogger {
     this.logTexture = null;
     this.logPlane = null;
     this.textBlock = null;
+  }
+
+  toggle_log_wall() {
+    if (this.scene.getMeshByName(WALL_EID)) {
+      this.xrs.send_command({
+        eid: WALL_EID,
+        ttl: 0,
+        tag: "p", // private
+      });
+    } else {
+      this.xrs.send_command({
+        eid: WALL_EID,
+        set: {
+          logwall: {},
+          holdable: {},
+          pos: [0, 5, 10],
+        },
+        tag: "p", // private
+      });
+    }
   }
 
   createLogGui(eid: string) {

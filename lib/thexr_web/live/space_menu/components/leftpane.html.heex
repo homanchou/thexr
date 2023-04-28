@@ -1,0 +1,8 @@
+<div id="leftpane" class="w-2/12 bg-teal-500 h-full">
+  <.button phx-click={JS.push("select_submenu", value: %{"submenu" => "entities"})}>
+    Entities
+  </.button>
+  <.button phx-click={JS.dispatch("toggle_logwall")}>
+    Toggle Log Wall
+  </.button>
+</div>

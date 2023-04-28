@@ -83,19 +83,6 @@ defmodule Thexr.Worlds do
     ThexrWeb.Space.Manager.process_event(
       pid,
       %{
-        "eid" => "xr-log-wall",
-        "set" => %{
-          "logwall" => %{},
-          "pos" => [0, 5, 10],
-          "holdable" => %{}
-        }
-      },
-      nil
-    )
-
-    ThexrWeb.Space.Manager.process_event(
-      pid,
-      %{
         "eid" => "bx1",
         "set" => %{
           "shape" => "box",

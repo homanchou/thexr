@@ -165,29 +165,9 @@ export class ServiceBroker {
 }
 
 // these are hooks for modals, microphone and hiding / showing the menu
-class XRSHook extends Hook {
-  xrs: XRS;
+export class XRSHook extends Hook {
   mounted() {
-    console.log("this is", this);
-    this.xrs = window["xrs"];
-    console.log("xrs hook mounted");
-    // when we're mounted, make a request to get the initial vars so we can initialize the space
-    // this.pushEvent("request_vars", {}, (resp) => {
-    //   this.xrs.init(resp);
-    // });
-    // when user clicks enter space, tell liveview to remove the modal, and
-    // let xrs create an event
-    window.addEventListener("enter_space", (ev) => {
-      this.xrs.entered();
-      this.pushEvent("enter_space", {});
-    });
-    // same
-    window.addEventListener("toggle_mic", () => {
-      this.xrs.toggle_mic();
-    });
-    this.xrs.services.bus.mic_toggled.subscribe(() => {
-      this.pushEvent("mic_toggled", {});
-    });
+    (window["xrs"] as XRS).mount_xrs_hooks(this);
   }
 }
 

@@ -168,12 +168,13 @@ export class ServiceBroker {
 class XRSHook extends Hook {
   xrs: XRS;
   mounted() {
+    console.log("this is", this);
     this.xrs = window["xrs"];
     console.log("xrs hook mounted");
     // when we're mounted, make a request to get the initial vars so we can initialize the space
-    this.pushEvent("request_vars", {}, (resp) => {
-      this.xrs.init(resp);
-    });
+    // this.pushEvent("request_vars", {}, (resp) => {
+    //   this.xrs.init(resp);
+    // });
     // when user clicks enter space, tell liveview to remove the modal, and
     // let xrs create an event
     window.addEventListener("enter_space", (ev) => {
@@ -183,7 +184,9 @@ class XRSHook extends Hook {
     // same
     window.addEventListener("toggle_mic", () => {
       this.xrs.toggle_mic();
-      this.pushEvent("toggle_mic", {});
+    });
+    this.xrs.services.bus.mic_toggled.subscribe(() => {
+      this.pushEvent("mic_toggled", {});
     });
   }
 }

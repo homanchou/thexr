@@ -95,13 +95,14 @@ export class ServiceWebRTC {
   }
 
   toggle_mic() {
-    const new_pref = this.i_am_muted() ? "unmuted" : "muted";
+    this.my_mic_pref = this.my_mic_pref === "muted" ? "unmuted" : "muted";
 
     this.xrs.send_command({
       eid: this.xrs.config.member_id,
-      set: { mic: new_pref },
+      set: { mic: this.my_mic_pref },
       tag: "m",
     });
+    this.xrs.services.bus.mic_toggled.next(this.my_mic_pref);
   }
 
   start_connection_observer() {
@@ -112,12 +113,12 @@ export class ServiceWebRTC {
           this.state.joined = true;
         }
         // if we're unmuted and not yet publishing audio, we should publish
-        if (!this.state.published_audio && !this.i_am_muted()) {
+        if (!this.state.published_audio && this.my_mic_pref !== "muted") {
           await this.publishAudio();
           this.state.published_audio = true;
         }
         // if we're muted, but publishing audio, we should unpublish it
-        else if (this.i_am_muted() && this.state.published_audio) {
+        else if (this.my_mic_pref === "muted" && this.state.published_audio) {
           await this.unpublishAudio();
           this.state.published_audio = false;
         }
@@ -136,14 +137,11 @@ export class ServiceWebRTC {
       this.member_mics[cmd.eid] = cmd.set?.mic;
       this.updateCountAndJoinOrUnjoin();
     });
+    // when people leave
     this.xrs.services.bus.on_del(["mic"]).subscribe((cmd) => {
       delete this.member_mics[cmd.eid];
       this.updateCountAndJoinOrUnjoin();
     });
-  }
-
-  i_am_muted() {
-    return this.member_mics[this.xrs.config.member_id] !== "unmuted";
   }
 
   count_members_connected() {

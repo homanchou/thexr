@@ -54,7 +54,7 @@ defmodule ThexrWeb.SpaceMenu.Index do
      )}
   end
 
-  def handle_event("toggle_mic", _, socket) do
+  def handle_event("mic_toggled", _, socket) do
     mic =
       case socket.assigns.mic do
         nil -> "unmuted"

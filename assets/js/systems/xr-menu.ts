@@ -1,8 +1,9 @@
-import { filter } from "rxjs";
+import { filter, takeUntil } from "rxjs";
 import type { XRS } from "../xrs";
 import * as BABYLON from "babylonjs";
 import { ServiceBus } from "../services/bus";
 import * as GUI from "babylonjs-gui";
+import { fromBabylonObservable } from "../utils/misc";
 
 export const BAR_WIDTH = 256;
 export const BAR_HEIGHT = 256;
@@ -52,6 +53,35 @@ export class SystemXRMenu {
       BAR_WIDTH,
       BAR_HEIGHT
     );
+
+    const button = this.makeButton(0, "Menu");
+    this.wrist_gui.addControl(button);
+    const micLabel = this.xrs.services.webrtc.my_mic_pref;
+
+    const button2 = this.makeButton(BAR_HEIGHT / 2, micLabel);
+    fromBabylonObservable(button2.onPointerClickObservable)
+      .pipe(takeUntil(this.bus.exiting_xr))
+      .subscribe(() => {
+        this.xrs.toggle_mic();
+      });
+
+    this.wrist_gui.addControl(button2);
+
+    this.bus.mic_toggled.subscribe((new_pref) => {
+      button2.textBlock!.text = new_pref;
+    });
+  }
+
+  makeButton(top: number, text: string) {
+    const button = GUI.Button.CreateSimpleButton(text, text);
+    button.width = 1;
+    button.height = 0.5;
+    button.color = "white";
+    button.background = "purple";
+    button.fontSize = 48;
+    button.top = top;
+    button.verticalAlignment = 0;
+    return button;
   }
 
   remove_immersive_menu() {}

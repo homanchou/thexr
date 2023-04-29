@@ -178,16 +178,10 @@ class MenuHook extends Hook {
   xrs: XRS;
   mounted() {
     this.xrs = window["xrs"];
-    this.xrs.services.bus.exiting_xr.subscribe(() => {
-      this.pushEvent("open_menu", {});
-    });
-    this.xrs.services.bus.entering_xr.subscribe(() => {
-      this.pushEvent("close_menu", {});
-    });
-
-    console.log("menu mounted");
   }
+
   updated(): void {
+    this.xrs.services.bus.menu_contents_updated.next(true);
     console.log("menu was updated");
   }
 }

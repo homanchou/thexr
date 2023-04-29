@@ -3,6 +3,7 @@ import * as BABYLON from "babylonjs";
 import * as GUI from "babylonjs-gui";
 import type { XRS } from "../xrs";
 import { ServiceBus } from "../services/bus";
+import { cameraFrontFloorPosition } from "../utils/misc";
 
 enum LogLevel {
   DEBUG,
@@ -21,8 +22,8 @@ export class SystemLogger {
   public bus: ServiceBus;
   public recentLogs: any[];
   public logLevel = LogLevel.INFO;
-  public logPlane: BABYLON.AbstractMesh | null;
-  public logTexture: GUI.AdvancedDynamicTexture | null;
+  public log_plane: BABYLON.AbstractMesh | null;
+  public log_texture: GUI.AdvancedDynamicTexture | null;
   public textBlock: GUI.TextBlock | null;
   public xrs: XRS;
 
@@ -37,10 +38,10 @@ export class SystemLogger {
     this.trapWindowError();
 
     this.bus.on_set(["logwall"]).subscribe((cmd) => {
-      this.createLogGui(cmd.eid);
+      this.create_log_gui();
     });
     this.bus.on_del(["logwall"]).subscribe(() => {
-      this.removeLogGui();
+      this.remove_log_gui();
     });
   }
 
@@ -74,11 +75,11 @@ export class SystemLogger {
     };
   }
 
-  removeLogGui() {
-    this.logTexture?.dispose();
-    this.logPlane?.dispose();
-    this.logTexture = null;
-    this.logPlane = null;
+  remove_log_gui() {
+    this.log_texture?.dispose();
+    this.log_plane?.dispose();
+    this.log_texture = null;
+    this.log_plane = null;
     this.textBlock = null;
   }
 
@@ -95,20 +96,19 @@ export class SystemLogger {
         set: {
           logwall: {},
           holdable: {},
-          pos: [0, 5, 10],
         },
         tag: "p", // private
       });
     }
   }
 
-  createLogGui(eid: string) {
+  create_log_gui() {
     // don't create twice
-    if (this.scene.getMeshByName(eid)) {
+    if (this.scene.getMeshByName(WALL_EID)) {
       return;
     }
-    this.logPlane = BABYLON.MeshBuilder.CreatePlane(
-      eid,
+    this.log_plane = BABYLON.MeshBuilder.CreatePlane(
+      WALL_EID,
       {
         height: WALL_HEIGHT,
         width: WALL_WIDTH,
@@ -116,26 +116,37 @@ export class SystemLogger {
       },
       this.scene
     );
-    this.logPlane.rotationQuaternion = new BABYLON.Quaternion();
-    // this.logPlane.isPickable = false;
-    this.logPlane.showBoundingBox = true;
-    // this.logPlane.position.y = Math.ceil(WALL_HEIGHT / 2);
-    // this.logPlane.position.z = 5;
-    // this.logPlane.rotation.x = BABYLON.Angle.FromDegrees(-15).radians();
+    this.log_plane.rotationQuaternion = new BABYLON.Quaternion();
+    // this.log_plane.isPickable = false;
+    this.log_plane.showBoundingBox = true;
+    // this.log_plane.position.y = Math.ceil(WALL_HEIGHT / 2);
+    // this.log_plane.position.z = 5;
+    // this.log_plane.rotation.x = BABYLON.Angle.FromDegrees(-15).radians();
 
-    this.logTexture = GUI.AdvancedDynamicTexture.CreateForMesh(
-      this.logPlane,
+    const pos = cameraFrontFloorPosition(this.scene, 10);
+    if (pos) {
+      this.log_plane.position.fromArray(pos);
+      this.log_plane.position.y += WALL_HEIGHT / 2;
+    }
+
+    this.log_plane.lookAt(
+      this.scene.activeCamera?.position as BABYLON.Vector3,
+      BABYLON.Angle.FromDegrees(180).radians()
+    );
+
+    this.log_texture = GUI.AdvancedDynamicTexture.CreateForMesh(
+      this.log_plane,
       WALL_WIDTH * 100,
       WALL_HEIGHT * 100
     );
-    this.logTexture.background = "#F0F0F0";
+    this.log_texture.background = "#F0F0F0";
 
     this.textBlock = new GUI.TextBlock("logs", this.recentLogsAsText());
     this.textBlock.textVerticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_TOP;
     this.textBlock.textHorizontalAlignment =
       GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
 
-    this.logTexture.addControl(this.textBlock);
+    this.log_texture.addControl(this.textBlock);
   }
 
   overRideWindowConsole() {

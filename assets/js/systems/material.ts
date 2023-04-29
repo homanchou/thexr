@@ -65,6 +65,7 @@ export class SystemMaterial {
       return this.materials[matName];
     }
     const myMaterial = new MAT.GridMaterial(matName, this.scene);
+    myMaterial.backFaceCulling = false;
     return myMaterial;
   }
 

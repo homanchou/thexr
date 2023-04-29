@@ -1,20 +1,28 @@
 <div id="menu_base" phx-hook="menu_hook">
   <!-- bars -->
-  <div :if={@menu_state == :closed} class="absolute z-50  top-0 left-0 w-4 h-4 bg-red-400">
-    <button id="toggle_menu" class="block bg-red-500" phx-click="toggle_menu">
+  <div id="menu_bars" class="absolute z-50  top-0 left-0 w-4 h-4 bg-red-400">
+    <button
+      id="menu_open_bars"
+      class="block bg-red-500"
+      phx-click={JS.show(to: "#menu_container") |> JS.hide(to: "#menu_open_bars")}
+    >
       <Heroicons.bars_3 class="h-10 w-10" />
     </button>
   </div>
 
   <div
-    :if={@menu_state != :closed}
-    class="w-6/12 h-full bg-red-300 absolute z-50 bg-opacity-50 border-2 border-red-950"
+    id="menu_container"
+    class="hidden w-6/12 h-full bg-red-300 absolute z-50 bg-opacity-50 border-2 border-red-950"
   >
-    <.button id="toggle_menu" class="absolute right-0 top-0" phx-click="toggle_menu">
+    <.button
+      id="close_menu"
+      class="absolute right-0 top-0"
+      phx-click={JS.hide(to: "#menu_container") |> JS.show(to: "#menu_open_bars")}
+    >
       <Heroicons.x_mark class="h-6 w-6" />
     </.button>
 
-    <div class="flex w-full h-full">
+    <div id="menu_left_right" class="flex w-full h-full">
       <.leftpane />
       <.rightpane menu_state={@menu_state} space={@space} member_id={@member_id} />
     </div>

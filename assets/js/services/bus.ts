@@ -33,6 +33,7 @@ export class ServiceBus {
   }>();
   public incoming_commands = new Subject<Command>();
   public mic_toggled = new Subject<"muted" | "unmuted">();
+  public menu_contents_updated = new Subject<any>();
   public head_movement = new Subject<PosRot>();
   // left movement, right movement
   public entered_space = new Subject<boolean>();

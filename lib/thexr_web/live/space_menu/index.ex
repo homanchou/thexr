@@ -8,7 +8,7 @@ defmodule ThexrWeb.SpaceMenu.Index do
     {:ok,
      assign(socket,
        mic: nil,
-       menu_state: :closed,
+       menu_state: %{submenu: "about"},
        entered: false,
        member_id: member_id,
        space: space
@@ -20,23 +20,6 @@ defmodule ThexrWeb.SpaceMenu.Index do
   embed_templates "components/*.html"
 
   @impl true
-  def handle_event("toggle_menu", _, socket) do
-    new_menu_state =
-      case socket.assigns.menu_state do
-        :closed -> %{submenu: "about"}
-        _ -> :closed
-      end
-
-    {:noreply, assign(socket, menu_state: new_menu_state)}
-  end
-
-  def handle_event("open_menu", _, socket) do
-    {:noreply, assign(socket, menu_state: %{submenu: "about"})}
-  end
-
-  def handle_event("close_menu", _, socket) do
-    {:noreply, assign(socket, menu_state: :closed)}
-  end
 
   def handle_event("select_submenu", %{"submenu" => submenu}, socket) do
     {:noreply, assign(socket, menu_state: %{submenu: submenu})}

@@ -141,3 +141,35 @@ export const setRot = (entity: BABYLON.TransformNode, rot: number[]) => {
 export const setScale = (entity: BABYLON.TransformNode, scale: number[]) => {
   entity.scaling.fromArray(scale);
 };
+
+export const cameraFrontPosition = (scene: BABYLON.Scene, distance = 2.5) => {
+  const forwardVec = scene
+    .activeCamera!.getDirection(BABYLON.Vector3.Forward())
+    .normalize()
+    .scaleInPlace(distance);
+  const assetPosition = scene.activeCamera!.position.add(forwardVec);
+  return assetPosition.asArray().map((v) => truncate(v));
+};
+
+export const cameraFrontFloorPosition = (
+  scene: BABYLON.Scene,
+  distance = 2.5
+) => {
+  const forwardVec = scene
+    .activeCamera!.getDirection(BABYLON.Vector3.Forward())
+    .normalize()
+    .scaleInPlace(distance);
+
+  const assetPosition = scene.activeCamera!.position.add(forwardVec);
+
+  const ray = new BABYLON.Ray(assetPosition, BABYLON.Vector3.Down());
+  ray.length = 20;
+
+  const pickInfo = scene.pickWithRay(ray);
+
+  if (pickInfo?.hit) {
+    return pickInfo.pickedPoint?.asArray().map((v) => truncate(v));
+  } else {
+    return assetPosition.asArray();
+  }
+};

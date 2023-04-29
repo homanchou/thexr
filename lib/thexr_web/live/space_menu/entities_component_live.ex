@@ -23,7 +23,9 @@ defmodule ThexrWeb.EntitiesComponentLive do
 
   def entity(assigns) do
     ~H"""
-    <.button phx-click="inspect_entity" phx-value-entity={@entity.id}><%= @entity.id %></.button>
+    <.button id={"btn_#{@entity.id}"} phx-click="inspect_entity" phx-value-entity={@entity.id}>
+      <%= @entity.id %>
+    </.button>
     """
   end
 end

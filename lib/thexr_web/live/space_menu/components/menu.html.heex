@@ -1,10 +1,14 @@
 <div id="menu_base" phx-hook="menu_hook">
   <!-- bars -->
-  <div id="menu_bars" class="absolute z-50  top-0 left-0 w-4 h-4 bg-red-400">
+  <div id="menu_bars" class="absolute z-50 top-0 left-0 w-4 h-4 bg-red-400">
     <button
       id="menu_open_bars"
       class="block bg-red-500"
-      phx-click={JS.show(to: "#menu_container") |> JS.hide(to: "#menu_open_bars")}
+      phx-click={
+        JS.add_class("z-50", to: "#menu_container")
+        |> JS.remove_class("z-0", to: "#menu_container")
+        |> JS.hide(to: "#menu_open_bars")
+      }
     >
       <Heroicons.bars_3 class="h-10 w-10" />
     </button>
@@ -12,12 +16,16 @@
 
   <div
     id="menu_container"
-    class="hidden w-6/12 h-full bg-red-300 absolute z-50 bg-opacity-50 border-2 border-red-950"
+    class="z-0 w-6/12 h-full bg-red-300 absolute bg-opacity-50 border-2 border-red-950"
   >
     <.button
       id="close_menu"
       class="absolute right-0 top-0"
-      phx-click={JS.hide(to: "#menu_container") |> JS.show(to: "#menu_open_bars")}
+      phx-click={
+        JS.remove_class("z-50", to: "#menu_container")
+        |> JS.add_class("z-0")
+        |> JS.show(to: "#menu_open_bars")
+      }
     >
       <Heroicons.x_mark class="h-6 w-6" />
     </.button>

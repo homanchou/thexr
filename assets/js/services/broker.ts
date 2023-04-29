@@ -182,6 +182,5 @@ class MenuHook extends Hook {
 
   updated(): void {
     this.xrs.services.bus.menu_contents_updated.next(true);
-    console.log("menu was updated");
   }
 }

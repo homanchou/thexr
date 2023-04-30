@@ -1,5 +1,14 @@
 # Thexr
 
+
+make all the signals for left and right, be simple primitives so they are easier to
+console log,  move the complex object into caches on the services or systems
+
+there is a race condition for holdable where we need the avatar hand meshes (which depends on drawing ourselves after an initial enter message), and we need controller ready to bind
+the mesh to the grip
+
+
+
 Problem with mic "muted" | "unmuted" as a component, is that sending this :set command
 will cause snapshot to save it because snapshot only resists member join, leaves, movements thus far
 

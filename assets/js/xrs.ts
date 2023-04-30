@@ -91,19 +91,6 @@ export class XRS {
     this.inited = true;
   }
 
-  entered() {
-    this.services.bus.entered_space.next(true);
-  }
-
-  toggle_mic() {
-    this.services.webrtc.toggle_mic();
-  }
-
-  toggle_log_wall() {
-    const sys = this.systems.find((s) => s.name === "logger") as SystemLogger;
-    sys.toggle_log_wall();
-  }
-
   send_command(command: Command, send_to_self: boolean = true) {
     // tags with 'p' are private, local entities, like menu or log wall
     if (command.tag !== "p") {
@@ -155,6 +142,21 @@ export class XRS {
     this.systems.push(system);
   }
 
+  // public apis for phx-* events to trigger
+
+  entered() {
+    this.services.bus.entered_space.next(true);
+  }
+
+  toggle_mic() {
+    this.services.webrtc.toggle_mic();
+  }
+
+  toggle_log_wall() {
+    const sys = this.systems.find((s) => s.name === "logger") as SystemLogger;
+    sys.toggle_log_wall();
+  }
+
   mount_xrs_hooks(hook: XRSHook) {
     window.addEventListener("dispatch_xrs", (ev) => {
       const method = ev["detail"].method;
@@ -164,6 +166,8 @@ export class XRS {
         console.error("no method", method, "on xrs");
       }
     });
+
+    // subscriptions to xrs bus events to effect the menu state
 
     this.services.bus.entered_space.subscribe(() => {
       hook.pushEvent("space_entered", {});

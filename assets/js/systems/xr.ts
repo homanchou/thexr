@@ -5,6 +5,8 @@ import {
   distinctUntilChanged,
   Subject,
   take,
+  tap,
+  scan,
 } from "rxjs";
 import type { XRS } from "../xrs";
 import * as BABYLON from "babylonjs";
@@ -37,6 +39,9 @@ export class SystemXR {
   public left_controller_removed$ = new Subject<BABYLON.WebXRInputSource>();
   public right_controller_removed$ = new Subject<BABYLON.WebXRInputSource>();
 
+  public _left_input_source: BABYLON.WebXRInputSource;
+  public _right_input_source: BABYLON.WebXRInputSource;
+
   public bus: ServiceBus;
 
   init(xrs: XRS) {
@@ -61,12 +66,12 @@ export class SystemXR {
     }
   }
 
-  getInputSource(hand: "left" | "right") {
-    return this[`${hand}InputSource`];
+  get_input_source(hand: "left" | "right") {
+    return this[`_${hand}_input_source`];
   }
 
   getHandVelocity(hand: "left" | "right") {
-    const inputSource = this.getInputSource(hand);
+    const inputSource = this.get_input_source(hand);
     if (inputSource && this.controllerPhysicsFeature) {
       const imposter =
         this.controllerPhysicsFeature.getImpostorForController(inputSource);
@@ -136,6 +141,8 @@ export class SystemXR {
         }
       ) as BABYLON.WebXRMotionControllerTeleportation;
     this.teleportation.rotationEnabled = false;
+    this.teleportation.straightRayEnabled = false;
+    this.teleportation.parabolicCheckRadius = 0.5;
 
     // function added here does not build up when entered and exiting VR
     // multiple times - tested with console.log
@@ -168,22 +175,22 @@ export class SystemXR {
 
     // trap some signals to help us set and tear down
     xrInput.onControllerAddedObservable.add((inputSource) => {
-      console.log("onController added", inputSource.inputSource.handedness);
+      const hand = inputSource.inputSource.handedness;
+      console.log("onController added", hand);
+      // cache the input source
+      this[`_${hand}_input_source`] = inputSource;
+
       inputSource.onMotionControllerInitObservable.add(() => {
-        if (inputSource.inputSource.handedness[0] === "l") {
-          this.left_controller_added$.next(inputSource);
-        } else {
-          this.right_controller_added$.next(inputSource);
-        }
+        this[`${hand}_controller_added$`].next(inputSource);
       });
     });
 
     xrInput.onControllerRemovedObservable.add((inputSource) => {
-      if (inputSource.inputSource.handedness[0] === "l") {
-        this.left_controller_removed$.next(inputSource);
-      } else {
-        this.right_controller_removed$.next(inputSource);
-      }
+      const hand = inputSource.inputSource.handedness;
+      console.log("onController removed", hand);
+
+      this[`${hand}_controller_removed$`].next(inputSource);
+      this[`_${hand}_input_source`] = null;
     });
 
     // subscribe and unsubscribe to buttons, axis, movement when controllers are added
@@ -311,7 +318,11 @@ export class SystemXR {
     hand: "left" | "right",
     inputSource: BABYLON.WebXRInputSource
   ) {
-    // listen for clean grip and release
+    // a release must be followed by a press first, so we need a flag
+    // to disgard events that have pressed-false unless we pressed true at least once
+    const buttons_pressed = {};
+
+    this.bus[`${hand}_grip_squeezed`].next(inputSource);
     this.bus[`${hand}_squeeze`]
       .pipe(
         takeUntil(this[`${hand}_controller_removed$`]),
@@ -321,11 +332,15 @@ export class SystemXR {
       .subscribe((squeezed) => {
         if (squeezed) {
           this.bus[`${hand}_grip_squeezed`].next(inputSource);
+          buttons_pressed["grip"] = true;
         } else {
-          this.bus[`${hand}_grip_released`].next(inputSource);
+          if (buttons_pressed["grip"]) {
+            this.bus[`${hand}_grip_released`].next(inputSource);
+          }
         }
       });
 
+    // listen for clean grip and release
     this.bus[`${hand}_trigger`]
       .pipe(
         takeUntil(this[`${hand}_controller_removed$`]),
@@ -335,24 +350,29 @@ export class SystemXR {
       .subscribe((squeezed) => {
         if (squeezed) {
           this.bus[`${hand}_trigger_squeezed`].next(inputSource);
+          buttons_pressed["trigger"] = true;
         } else {
-          this.bus[`${hand}_trigger_released`].next(inputSource);
+          if (buttons_pressed["trigger"]) {
+            this.bus[`${hand}_trigger_released`].next(inputSource);
+          }
         }
       });
 
     this.bus[`${hand}_button`]
-      .pipe(
-        takeUntil(this[`${hand}_controller_removed$`]),
-        distinctUntilChanged(
-          (a, b) =>
-            a.controllerComponent.pressed === b.controllerComponent.pressed
-        )
-      )
-      .subscribe((val) => {
-        if (val.controllerComponent.pressed) {
-          this.bus[`${hand}_button_down`].next(val.controllerComponent.id);
+      .pipe(takeUntil(this[`${hand}_controller_removed$`]))
+      .subscribe((data) => {
+        if (
+          data.controllerComponent.pressed &&
+          buttons_pressed[data.controllerComponent.id] === false
+        ) {
+          this.bus[`${hand}_button_down`].next(data.controllerComponent.id);
+          buttons_pressed[data.controllerComponent.id] = true;
         } else {
-          this.bus[`${hand}_button_up`].next(val.controllerComponent.id);
+          // this will ignore any light touching of a button
+          if (buttons_pressed[data.controllerComponent.id]) {
+            this.bus[`${hand}_button_up`].next(data.controllerComponent.id);
+          }
+          buttons_pressed[data.controllerComponent.id] = false;
         }
       });
   }

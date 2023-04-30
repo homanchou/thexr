@@ -51,6 +51,7 @@ export class ServiceBus {
     grip: BABYLON.AbstractMesh;
   }>();
   public controller_removed = new Subject<{ hand: any }>();
+
   public pulse = new Subject<{
     hand: "left" | "right";
     intensity: number;

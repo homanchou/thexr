@@ -161,6 +161,7 @@ class Avatar {
         this.scene
       );
       this.headTransform.rotationQuaternion = new BABYLON.Quaternion();
+      this.headTransform.position.y = 1.6; // just a default pos, when we don't have anything else to match our default camera position too
 
       const box = BABYLON.MeshBuilder.CreateBox(
         headName,

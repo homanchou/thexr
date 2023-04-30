@@ -37,6 +37,40 @@ export class SystemXRMenu {
     this.xrs = xrs;
     this.bus = this.xrs.services.bus;
     this.scene = this.xrs.services.engine.scene;
+
+    // this.bus.left_button.subscribe((data) => {
+    //   console.log(
+    //     "left button",
+    //     data.controllerComponent.id,
+    //     data.controllerComponent.value,
+    //     data.controllerComponent.pressed
+    //   );
+    // });
+
+    this.bus.left_trigger_squeezed.subscribe((d) => {
+      console.log("left trigger squeezed");
+    });
+
+    this.bus.left_trigger_released.subscribe((d) => {
+      console.log("left trigger released");
+    });
+
+    this.bus.left_grip_squeezed.subscribe((d) => {
+      console.log("left grip squeezed");
+    });
+
+    this.bus.left_grip_released.subscribe((d) => {
+      console.log("left grip released");
+    });
+
+    this.bus.left_button_up.subscribe((d) => {
+      console.log("button up", d);
+    });
+
+    this.bus.left_button_down.subscribe((d) => {
+      console.log("button down", d);
+    });
+
     this.bus.controller_ready
       .pipe(filter((x) => x.hand === "left"))
       .subscribe((data) => {
@@ -144,46 +178,49 @@ export class SystemXRMenu {
   }
 
   affix_wrist_menu(grip: BABYLON.AbstractMesh) {
-    this.wrist_plane = BABYLON.MeshBuilder.CreatePlane(
-      "wrist_plane",
-      { height: BAR_HEIGHT * BAR_SCALING, width: BAR_WIDTH * BAR_SCALING },
-      this.scene
-    );
+    if (!this.wrist_plane) {
+      this.wrist_plane = BABYLON.MeshBuilder.CreatePlane(
+        "wrist_plane",
+        { height: BAR_HEIGHT * BAR_SCALING, width: BAR_WIDTH * BAR_SCALING },
+        this.scene
+      );
+    }
     this.wrist_plane.showBoundingBox = true;
     this.wrist_plane.position.y = 0.05;
     this.wrist_plane.rotation.x = BABYLON.Angle.FromDegrees(60).radians();
 
     this.wrist_plane.parent = grip;
-    this.wrist_gui = GUI.AdvancedDynamicTexture.CreateForMesh(
-      this.wrist_plane,
-      BAR_WIDTH,
-      BAR_HEIGHT
-    );
+    if (!this.wrist_gui) {
+      this.wrist_gui = GUI.AdvancedDynamicTexture.CreateForMesh(
+        this.wrist_plane,
+        BAR_WIDTH,
+        BAR_HEIGHT
+      );
+      const button = this.makeButton(0, "Menu");
+      fromBabylonObservable(button.onPointerClickObservable)
+        .pipe(takeUntil(this.bus.exiting_xr))
+        .subscribe(() => {
+          this.toggle_menu_wall();
+        });
 
-    const button = this.makeButton(0, "Menu");
-    fromBabylonObservable(button.onPointerClickObservable)
-      .pipe(takeUntil(this.bus.exiting_xr))
-      .subscribe(() => {
-        this.toggle_menu_wall();
-      });
+      this.wrist_gui.addControl(button);
+      const micLabel = this.xrs.services.webrtc.my_mic_pref;
 
-    this.wrist_gui.addControl(button);
-    const micLabel = this.xrs.services.webrtc.my_mic_pref;
+      const button2 = this.makeButton(BAR_HEIGHT / 2, micLabel);
+      fromBabylonObservable(button2.onPointerClickObservable)
+        .pipe(takeUntil(this.bus.exiting_xr))
+        .subscribe(() => {
+          this.xrs.toggle_mic();
+        });
 
-    const button2 = this.makeButton(BAR_HEIGHT / 2, micLabel);
-    fromBabylonObservable(button2.onPointerClickObservable)
-      .pipe(takeUntil(this.bus.exiting_xr))
-      .subscribe(() => {
-        this.xrs.toggle_mic();
-      });
+      this.wrist_gui.addControl(button2);
 
-    this.wrist_gui.addControl(button2);
-
-    this.bus.mic_toggled
-      .pipe(takeUntil(this.bus.exiting_xr))
-      .subscribe((new_pref) => {
-        button2.textBlock!.text = new_pref;
-      });
+      this.bus.mic_toggled
+        .pipe(takeUntil(this.bus.exiting_xr))
+        .subscribe((new_pref) => {
+          button2.textBlock!.text = new_pref;
+        });
+    }
   }
 
   makeButton(top: number, text: string) {

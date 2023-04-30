@@ -1,13 +1,4 @@
-import {
-  filter,
-  map,
-  Observable,
-  race,
-  take,
-  Subscription,
-  mapTo,
-  tap,
-} from "rxjs";
+import { filter, map, race, take } from "rxjs";
 import * as BABYLON from "babylonjs";
 import type { SystemXR } from "./xr";
 import type { XRS } from "../xrs";
@@ -20,8 +11,11 @@ import { getSetParentValues, truncate } from "../utils/misc";
  */
 export class SystemHoldable {
   public name = "holdable";
+  // some caching
   public leftHandNode: BABYLON.Node;
   public rightHandNode: BABYLON.Node;
+  public left_hand_mesh: BABYLON.AbstractMesh;
+  public right_hand_mesh: BABYLON.AbstractMesh;
   // retain some memory of what we're holding here in case controller blip off we can reattach to our grip
   public leftHeldObject: BABYLON.Node;
   public rightHeldObject: BABYLON.Node;
@@ -29,6 +23,7 @@ export class SystemHoldable {
   public xrs: XRS;
   public bus: ServiceBus;
   public scene: BABYLON.Scene;
+
   init(xrs: XRS) {
     this.xrs = xrs;
     this.scene = this.xrs.services.engine.scene;
@@ -46,6 +41,23 @@ export class SystemHoldable {
     // subscribes to a release
     this.parentGrabbedMesh("left");
     this.parentGrabbedMesh("right");
+
+    this.bus.on_set(["holdable"]).subscribe((cmd) => {
+      const node =
+        this.scene.getMeshByName(cmd.eid) ||
+        this.scene.getTransformNodeByName(cmd.eid);
+      if (node) {
+        BABYLON.Tags.AddTagsTo(node, "holdable");
+      }
+    });
+    this.bus.on_del(["holdable"]).subscribe((cmd) => {
+      const node =
+        this.scene.getMeshByName(cmd.eid) ||
+        this.scene.getTransformNodeByName(cmd.eid);
+      if (node) {
+        BABYLON.Tags.RemoveTagsFrom(node, "holdable");
+      }
+    });
   }
 
   // side effect of receiving a mesh grabbed messaged
@@ -190,6 +202,7 @@ export class SystemHoldable {
 
       node.parent = grip;
       this[`${hand}HandNode`] = node;
+      this[`${hand}_hand_mesh`] = node.getChildMeshes()[0];
       // on a blip, if we were grabbing something, put it in the hand
       const grabbedObject = this[`${hand}HeldObject`];
       if (grabbedObject) {
@@ -202,10 +215,7 @@ export class SystemHoldable {
     this.bus[`${hand}_grip_squeezed`]
       .pipe(
         map((inputSource) => {
-          return this.findGrabbableMesh(
-            hand,
-            inputSource!.grip!.getWorldMatrix()
-          );
+          return this.findGrabbableMesh(hand);
         }),
         filter((result) => result !== null)
       )
@@ -217,49 +227,15 @@ export class SystemHoldable {
       });
   }
 
-  findGrabbableMesh(
-    hand: "left" | "right",
-    handMatrix: BABYLON.Matrix
-  ): BABYLON.AbstractMesh | null {
-    const multiplier = hand[0] === "l" ? 1 : -1;
+  findGrabbableMesh(hand: "left" | "right"): BABYLON.AbstractMesh | null {
+    const handMesh = this[`${hand}_hand_mesh`];
 
-    const rayParams = [
-      { p1: [multiplier * 0.03, 0, 0], p2: [multiplier * 0.2, 0, 0] }, // horizontal
-      { p1: [0, -0.05, 0], p2: [0, -0.2, 0] }, // forward,
-      { p1: [0, 0, 0.05], p2: [0, 0, 0.1] }, // top
-      {
-        p1: [multiplier * 0.08, 0, 0.05],
-        p2: [multiplier * 0.08, -0.2, 0.05],
-      }, // 2nd forward,
-
-      // { p1: [0.1 * multiplier, 0.1, -0.1], p2: [0, -0.26, 0.024] }, // diagonal
-    ];
-
-    for (let i = 0; i < rayParams.length; i++) {
-      const { p1, p2 } = rayParams[i];
-      const ray = BABYLON.Ray.CreateNewFromTo(
-        BABYLON.Vector3.FromArray(p1),
-        BABYLON.Vector3.FromArray(p2),
-        handMatrix
-      );
-      BABYLON.RayHelper.CreateAndShow(ray, this.scene, BABYLON.Color3.Red());
-
-      const pickInfo = this.scene.pickWithRay(ray) as BABYLON.PickingInfo;
-      if (pickInfo.pickedMesh) {
-        console.log("pickedable mesh found");
-      }
-      if (
-        pickInfo.pickedMesh &&
-        this.xrs.services.store.has_component(
-          pickInfo.pickedMesh!.name,
-          "holdable"
-        )
-      ) {
-        console.log("found a grabble mesh");
-        return pickInfo.pickedMesh;
+    const holdableMeshes = this.scene.getMeshesByTags("holdable");
+    for (let i = 0; i < holdableMeshes.length; i++) {
+      if (handMesh.intersectsMesh(holdableMeshes[i])) {
+        return holdableMeshes[i];
       }
     }
-    console.log("no grabbable mesh");
     return null;
   }
 }

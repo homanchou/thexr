@@ -14,6 +14,14 @@ defmodule ThexrWeb.CoreComponents do
   alias Phoenix.LiveView.JS
   import ThexrWeb.Gettext
 
+  # this here is a hack to be able to execute a method on the xrs object at any time
+  # from a phx-* event, there is an event listener on xrs listening to a particular dispatch
+  # that will look for a method name on the body, then clear it
+  def dispatch_xrs(js \\ %JS{}, xrs_method) do
+    js
+    |> JS.dispatch("dispatch_xrs", detail: %{"method" => xrs_method})
+  end
+
   attr :id, :string, required: true
   attr :show, :boolean, default: false
   attr :on_cancel, JS, default: %JS{}

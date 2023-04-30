@@ -1,5 +1,6 @@
 <div class="absolute z-50 left-8 mr-8 bottom-12">
-  <button class="block p-2 bg-gray-400" phx-click={JS.dispatch("toggle_mic")}>
+  <button class="block p-2 bg-gray-400" phx-click={dispatch_xrs("toggle_mic")}>
+    <pre><%= @mic %></pre>
     <%= if @mic == "unmuted" do %>
       <Heroicons.microphone class="h-10 w-10 fill-green-600" />
     <% else %>

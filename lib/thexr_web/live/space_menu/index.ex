@@ -45,22 +45,24 @@ defmodule ThexrWeb.SpaceMenu.Index do
         "unmuted" -> "muted"
       end
 
+    IO.inspect(mic, label: "new value of mic")
+
     {:noreply, assign(socket, mic: mic)}
   end
 
-  def handle_event("request_vars", _payload, socket) do
-    space_id = socket.assigns.space.id
+  # def handle_event("request_vars", _payload, socket) do
+  #   space_id = socket.assigns.space.id
 
-    payload = %{
-      space_id: space_id,
-      member_id: socket.assigns.member_id,
-      snapshot: ThexrWeb.Space.Manager.get_snapshot(space_id)
-    }
+  #   payload = %{
+  #     space_id: space_id,
+  #     member_id: socket.assigns.member_id,
+  #     snapshot: ThexrWeb.Space.Manager.get_snapshot(space_id)
+  #   }
 
-    {:reply, payload, socket}
-  end
+  #   {:reply, payload, socket}
+  # end
 
-  def handle_event("enter_space", _, socket) do
+  def handle_event("space_entered", _, socket) do
     socket = assign(socket, entered: true)
     {:noreply, socket}
   end

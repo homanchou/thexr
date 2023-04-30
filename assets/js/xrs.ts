@@ -99,6 +99,11 @@ export class XRS {
     this.services.webrtc.toggle_mic();
   }
 
+  toggle_log_wall() {
+    const sys = this.systems.find((s) => s.name === "logger") as SystemLogger;
+    sys.toggle_log_wall();
+  }
+
   send_command(command: Command, send_to_self: boolean = true) {
     // tags with 'p' are private, local entities, like menu or log wall
     if (command.tag !== "p") {
@@ -151,19 +156,21 @@ export class XRS {
   }
 
   mount_xrs_hooks(hook: XRSHook) {
-    window.addEventListener("enter_space", (ev) => {
-      this.entered();
-      hook.pushEvent("enter_space", {});
+    window.addEventListener("dispatch_xrs", (ev) => {
+      const method = ev["detail"].method;
+      if (this[method]) {
+        this[method]();
+      } else {
+        console.error("no method", method, "on xrs");
+      }
     });
-    window.addEventListener("toggle_mic", () => {
-      this.toggle_mic();
+
+    this.services.bus.entered_space.subscribe(() => {
+      hook.pushEvent("space_entered", {});
     });
+
     this.services.bus.mic_toggled.subscribe(() => {
       hook.pushEvent("mic_toggled", {});
-    });
-    window.addEventListener("toggle_logwall", () => {
-      const sys = this.systems.find((s) => s.name === "logger") as SystemLogger;
-      sys.toggle_log_wall();
     });
   }
 }

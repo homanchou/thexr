@@ -162,11 +162,24 @@ export class XRS {
     sys.toggle_log_wall();
   }
 
+  add_entity(args) {
+    if (args["shape"]) {
+      console.log("create a", args["shape"]);
+      const sys = this.systems.find((s) => s.name === "shape") as SystemShape;
+      sys.create_shape(args["shape"]);
+    }
+  }
+
   mount_xrs_hooks(hook: XRSHook) {
     window.addEventListener("dispatch_xrs", (ev) => {
       const method = ev["detail"].method;
+      const args = ev["detail"].args;
       if (this[method]) {
-        this[method]();
+        if (args) {
+          this[method](args);
+        } else {
+          this[method]();
+        }
       } else {
         console.error("no method", method, "on xrs");
       }

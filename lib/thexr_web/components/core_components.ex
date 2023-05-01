@@ -17,9 +17,11 @@ defmodule ThexrWeb.CoreComponents do
   # this here is a hack to be able to execute a method on the xrs object at any time
   # from a phx-* event, there is an event listener on xrs listening to a particular dispatch
   # that will look for a method name on the body, then clear it
-  def dispatch_xrs(js \\ %JS{}, xrs_method) do
+
+  # opts is a keyword list that requires :method, and optionally can have :args
+  def dispatch_xrs(js \\ %JS{}, opts) do
     js
-    |> JS.dispatch("dispatch_xrs", detail: %{"method" => xrs_method})
+    |> JS.dispatch("dispatch_xrs", detail: Enum.into(opts, %{}))
   end
 
   attr :id, :string, required: true

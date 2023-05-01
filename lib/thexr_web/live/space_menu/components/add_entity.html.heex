@@ -1,0 +1,13 @@
+<div class="w-full bg-purple-200">
+  <%= for shape <- ["box",
+          "sphere",
+          "cylinder",
+          "plane",
+          "capsule",
+          "ground",
+          "cone"] do %>
+    <.button phx-click={dispatch_xrs(method: "add_entity", args: %{"shape" => shape})}>
+      <%= shape %>
+    </.button>
+  <% end %>
+</div>

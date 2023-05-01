@@ -2,7 +2,10 @@
   <.button phx-click={JS.push("select_submenu", value: %{"submenu" => "entities"})}>
     Entities
   </.button>
-  <.button phx-click={dispatch_xrs("toggle_log_wall")}>
-    Toggle Log Wall
+  <.button phx-click={JS.push("select_submenu", value: %{"submenu" => "add_entity"})}>
+    Add Entity
+  </.button>
+  <.button phx-click={dispatch_xrs(method: "toggle_log_wall")}>
+    Logs
   </.button>
 </div>

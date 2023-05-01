@@ -1,3 +1,8 @@
+import {
+  cameraFrontFloorPosition,
+  cameraFrontPosition,
+  random_id,
+} from "../utils/misc";
 import { XRS } from "../xrs";
 import * as BABYLON from "babylonjs";
 
@@ -5,6 +10,21 @@ export class SystemShape {
   public xrs: XRS;
   public name = "shape";
   public scene: BABYLON.Scene;
+
+  create_shape(shape: string) {
+    const pos = cameraFrontPosition(this.scene, 3);
+
+    this.xrs.send_command({
+      eid: `${shape}_${random_id(5)}`,
+      set: {
+        shape,
+        pos,
+        holdable: {},
+        floor: {},
+      },
+    });
+  }
+
   init(xrs: XRS) {
     this.xrs = xrs;
     this.scene = this.xrs.services.engine.scene;

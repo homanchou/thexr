@@ -46,9 +46,31 @@ export class SystemXRMenu {
     //     data.controllerComponent.pressed
     //   );
     // });
-    this.bus.left_buttons.subscribe((event) => {
-      console.log(event);
-    });
+    this.bus.left_buttons
+      .pipe(
+        filter(
+          (event) =>
+            event.id === "x-button" &&
+            !!event.changes.pressed?.previous &&
+            !event.changes.pressed?.current
+        )
+      )
+      .subscribe((event) => {
+        this.xrs.toggle_mic();
+      });
+
+    this.bus.left_buttons
+      .pipe(
+        filter(
+          (event) =>
+            event.id === "y-button" &&
+            !!event.changes.pressed?.previous &&
+            !event.changes.pressed?.current
+        )
+      )
+      .subscribe((event) => {
+        this.toggle_menu_wall();
+      });
 
     this.bus.left_controller_added.subscribe((data) => {
       const grip = this.xrs.get_grip("left");

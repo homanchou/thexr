@@ -15,6 +15,16 @@ export type xrComponentChange = {
   controllerComponent: BABYLON.WebXRControllerComponent;
 };
 
+export interface xrButtonChanges {
+  value?: { current: number; previous: number };
+  touched?: { current: boolean; previous: boolean };
+  pressed?: { current: boolean; previous: boolean };
+  axes?: {
+    current: { x: number; y: number };
+    previous: { x: number; y: number };
+  };
+}
+
 export class ServiceBus {
   public xrs: XRS;
   public animate_translate = new Subject<{
@@ -46,11 +56,17 @@ export class ServiceBus {
   public exiting_xr = this.xr_state.pipe(
     filter((msg) => msg === BABYLON.WebXRState.EXITING_XR)
   );
-  public controller_ready = new Subject<{
-    hand: string;
-    grip: BABYLON.AbstractMesh;
-  }>();
-  public controller_removed = new Subject<{ hand: any }>();
+  // public controller_ready = new Subject<{
+  //   hand: string;
+  //   grip: BABYLON.AbstractMesh;
+  // }>();
+  // public controller_removed = new Subject<{ hand: any }>();
+  // also individual hands
+
+  public left_controller_added = new Subject<any>();
+  public right_controller_added = new Subject<any>();
+  public left_controller_removed = new Subject<any>();
+  public right_controller_removed = new Subject<any>();
 
   public pulse = new Subject<{
     hand: "left" | "right";
@@ -62,33 +78,31 @@ export class ServiceBus {
   public left_hand_moved = new Subject<PosRot>();
   public right_hand_moved = new Subject<PosRot>();
 
-  public left_trigger = new Subject<xrComponentChange>();
-  public left_squeeze = new Subject<xrComponentChange>();
-  public left_button = new Subject<xrComponentChange>();
-  public left_thumbstick = new Subject<xrComponentChange>();
-  public left_touchpad = new Subject<xrComponentChange>();
-  public right_trigger = new Subject<xrComponentChange>();
-  public right_squeeze = new Subject<xrComponentChange>();
-  public right_button = new Subject<xrComponentChange>();
-  public right_thumbstick = new Subject<xrComponentChange>();
-  public right_touchpad = new Subject<xrComponentChange>();
+  public left_trigger = new Subject<xrButtonChanges>();
+  public left_squeeze = new Subject<xrButtonChanges>();
+  public left_buttons = new Subject<{ id: string; changes: xrButtonChanges }>();
+  public left_thumbstick = new Subject<xrButtonChanges>();
+  public left_touchpad = new Subject<xrButtonChanges>();
+  public right_trigger = new Subject<xrButtonChanges>();
+  public right_squeeze = new Subject<xrButtonChanges>();
+  public right_buttons = new Subject<{
+    id: string;
+    changes: xrButtonChanges;
+  }>();
+  public right_thumbstick = new Subject<xrButtonChanges>();
+  public right_touchpad = new Subject<xrButtonChanges>();
   public left_axes = new Subject<{ x: number; y: number }>();
   public right_axes = new Subject<{ x: number; y: number }>();
 
-  public; // clean grip and release (alternating values)
-  public left_grip_squeezed = new Subject<BABYLON.WebXRInputSource>();
-  public left_grip_released = new Subject<BABYLON.WebXRInputSource>();
-  public left_trigger_squeezed = new Subject<BABYLON.WebXRInputSource>();
-  public left_trigger_released = new Subject<BABYLON.WebXRInputSource>();
-  public right_grip_squeezed = new Subject<BABYLON.WebXRInputSource>();
-  public right_grip_released = new Subject<BABYLON.WebXRInputSource>();
-  public right_trigger_squeezed = new Subject<BABYLON.WebXRInputSource>();
-  public right_trigger_released = new Subject<BABYLON.WebXRInputSource>();
-
-  public left_button_down = new Subject<string>(); // id of button
-  public left_button_up = new Subject<string>();
-  public right_button_down = new Subject<string>();
-  public right_button_up = new Subject<string>();
+  // clean grip and release (alternating values)
+  public left_grip_squeezed = new Subject<any>();
+  public left_grip_released = new Subject<any>();
+  public left_trigger_squeezed = new Subject<any>();
+  public left_trigger_released = new Subject<any>();
+  public right_grip_squeezed = new Subject<any>();
+  public right_grip_released = new Subject<any>();
+  public right_trigger_squeezed = new Subject<any>();
+  public right_trigger_released = new Subject<any>();
 
   public left_grip_mesh = new Subject<{
     mesh: BABYLON.AbstractMesh;

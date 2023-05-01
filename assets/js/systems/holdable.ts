@@ -31,7 +31,8 @@ export class SystemHoldable {
     this.systemXR = this.xrs.systems.find((s) => s.name === "xr") as SystemXR;
 
     // avatars always have hands, so when entering XR, have them track with the controllers
-    this.parentAvatarHandsToGripWheneverControllersAreOnline();
+    this.parentAvatarHandsToGripWheneverControllersAreOnline("left");
+    this.parentAvatarHandsToGripWheneverControllersAreOnline("right");
 
     // converts continuous squeezes to mesh gripgs if there is a ray intersection with a holdable
     this.detectMeshGrab("left");
@@ -174,8 +175,8 @@ export class SystemHoldable {
     });
   }
 
-  parentAvatarHandsToGripWheneverControllersAreOnline() {
-    this.bus.controller_ready.subscribe(({ hand, grip }) => {
+  parentAvatarHandsToGripWheneverControllersAreOnline(hand: "left" | "right") {
+    this.bus[`${hand}_controller_added`].subscribe(() => {
       const nodeName = `${this.xrs.config.member_id}_avatar_${hand}_transform`;
       const node = this.scene.getTransformNodeByName(
         nodeName
@@ -198,9 +199,8 @@ export class SystemHoldable {
       });
       node.position = BABYLON.Vector3.Zero();
       node.rotationQuaternion = new BABYLON.Quaternion();
-      node.parent = null;
 
-      node.parent = grip;
+      node.parent = this.xrs.get_grip(hand);
       this[`${hand}HandNode`] = node;
       this[`${hand}_hand_mesh`] = node.getChildMeshes()[0];
       // on a blip, if we were grabbing something, put it in the hand
@@ -214,7 +214,7 @@ export class SystemHoldable {
   detectMeshGrab(hand: "left" | "right") {
     this.bus[`${hand}_grip_squeezed`]
       .pipe(
-        map((inputSource) => {
+        map(() => {
           return this.findGrabbableMesh(hand);
         }),
         filter((result) => result !== null)

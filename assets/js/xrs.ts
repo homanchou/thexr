@@ -142,6 +142,11 @@ export class XRS {
     this.systems.push(system);
   }
 
+  get_grip(hand: "left" | "right") {
+    const sys = this.systems.find((sys) => sys.name === "xr") as SystemXR;
+    return sys.get_grip(hand);
+  }
+
   // public apis for phx-* events to trigger
 
   entered() {

@@ -170,6 +170,7 @@ export const cameraFrontFloorPosition = (
   if (pickInfo?.hit) {
     return pickInfo.pickedPoint?.asArray().map((v) => truncate(v));
   } else {
+    assetPosition.y = 0;
     return assetPosition.asArray();
   }
 };

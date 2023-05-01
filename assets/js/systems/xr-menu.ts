@@ -46,41 +46,17 @@ export class SystemXRMenu {
     //     data.controllerComponent.pressed
     //   );
     // });
-
-    this.bus.left_trigger_squeezed.subscribe((d) => {
-      console.log("left trigger squeezed");
+    this.bus.left_buttons.subscribe((event) => {
+      console.log(event);
     });
 
-    this.bus.left_trigger_released.subscribe((d) => {
-      console.log("left trigger released");
+    this.bus.left_controller_added.subscribe((data) => {
+      const grip = this.xrs.get_grip("left");
+      this.affix_wrist_menu(grip);
     });
-
-    this.bus.left_grip_squeezed.subscribe((d) => {
-      console.log("left grip squeezed");
+    this.bus.left_controller_removed.subscribe(() => {
+      this.remove_immersive_menu();
     });
-
-    this.bus.left_grip_released.subscribe((d) => {
-      console.log("left grip released");
-    });
-
-    this.bus.left_button_up.subscribe((d) => {
-      console.log("button up", d);
-    });
-
-    this.bus.left_button_down.subscribe((d) => {
-      console.log("button down", d);
-    });
-
-    this.bus.controller_ready
-      .pipe(filter((x) => x.hand === "left"))
-      .subscribe((data) => {
-        this.affix_wrist_menu(data.grip);
-      });
-    this.bus.controller_removed
-      .pipe(filter((x) => x.hand === "left"))
-      .subscribe(() => {
-        this.remove_immersive_menu();
-      });
     this.bus.on_set(["menu_wall"]).subscribe((cmd) => {
       this.create_menu_wall();
       this.refresh_menu_wall();

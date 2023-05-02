@@ -16,6 +16,7 @@ import type {
 } from "agora-rtc-sdk-ng";
 import { filter, take, Subject, scan, throttle, throttleTime } from "rxjs";
 import type { XRS } from "../xrs";
+import { Vector3 } from "babylonjs";
 
 interface IRemoteUser extends IAgoraRTCRemoteUser {
   processor?: SpatialAudioProcessor;
@@ -62,7 +63,10 @@ export class ServiceWebRTC {
 
     AgoraRTC.setLogLevel(0);
 
-    this.spatial_extension = new SpatialAudioExtension();
+    // this.spatial_extension = new SpatialAudioExtension();
+    this.spatial_extension = new SpatialAudioExtension({
+      assetsPath: "/external",
+    });
 
     AgoraRTC.registerExtensions([this.spatial_extension]);
     this.client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
@@ -185,18 +189,40 @@ export class ServiceWebRTC {
       this.options.token,
       this.options.uid
     );
-    // this.xrs.services.bus.head_movement
-    //   .pipe(throttleTime(500))
-    //   .subscribe((pos_rot) => {
-    //     console.log("updating self position in extension");
-    //     const cam = this.xrs.services.engine.scene.activeCamera;
-    //     this.spatial_extension.updateSelfPosition(
-    //       pos_rot.pos as [number, number, number],
-    //       [0, 0, 1],
-    //       [1, 0, 0],
-    //       [0, 1, 0]
-    //     );
-    //   });
+    this.xrs.services.bus.head_movement
+      .pipe(throttleTime(300))
+      .subscribe((pos_rot) => {
+        console.log("updating self position in extension");
+        const cam = this.xrs.services.engine.scene.activeCamera;
+        const forward = cam?.getForwardRay(1).direction.asArray();
+
+        const bright = BABYLON.Vector3.Right() as unknown as Vector3;
+
+        const right = cam?.getDirection(bright).asArray();
+        // this updates your local perception of fixed audio sources
+        // but doesn't broadcast your new position to other clients
+        this.spatial_extension.updateSelfPosition(
+          pos_rot.pos as [number, number, number],
+          forward as [number, number, number],
+          right as [number, number, number],
+          [0, 1, 0]
+        );
+      });
+
+    // this.settingData["Peter"].processor.updatePlayerPositionInfo({
+    //   position: [pos.x, pos.y, 1],
+    //   forward: forward,
+    // });
+
+    this.xrs.services.bus.on_set(["avatar_pose"]).subscribe((cmd) => {
+      const other_player = this.remoteUsers[cmd.eid];
+      if (other_player) {
+        other_player.processor?.updatePlayerPositionInfo({
+          position: cmd.set?.avatar_pose?.head?.pos as [number, number, number],
+          forward: [0, 0, 1],
+        });
+      }
+    });
   }
   async leave() {
     this.localTracks.audioTrack?.stop();
@@ -233,6 +259,9 @@ export class ServiceWebRTC {
     user: IAgoraRTCRemoteUser,
     mediaType: "audio" | "video"
   ) {
+    console.log("___________________________");
+    console.log("receiving subscribe remote user");
+    console.log(user.uid);
     // subscribe to a remote user
     try {
       await this.client.subscribe(user, mediaType);

@@ -6,30 +6,20 @@ import {
 } from "agora-extension-spatial-audio";
 
 import type {
-  ConnectionState,
   IAgoraRTCClient,
   IAgoraRTCRemoteUser,
   ILocalVideoTrack,
   IMicrophoneAudioTrack,
-  IRemoteAudioTrack,
-  IRemoteVideoTrack,
 } from "agora-rtc-sdk-ng";
-import {
-  filter,
-  take,
-  Subject,
-  scan,
-  throttle,
-  throttleTime,
-  Subscription,
-} from "rxjs";
+import { take, Subject, throttleTime, Subscription } from "rxjs";
 import type { XRS } from "../xrs";
 import { Vector3 } from "babylonjs";
 
 interface IRemoteUser extends IAgoraRTCRemoteUser {
   processor?: SpatialAudioProcessor;
-  track?: IRemoteAudioTrack;
 }
+
+type Array3 = [number, number, number];
 
 export class ServiceWebRTC {
   public subscriptions: Subscription[] = [];
@@ -86,7 +76,6 @@ export class ServiceWebRTC {
       // after user interacted with page, we can ask for devices
       // to get the permission prompt out of the way early
       const devices = await AgoraRTC.getDevices();
-      console.debug("devices", devices);
     });
 
     // currently we get app id when we join channel
@@ -102,13 +91,10 @@ export class ServiceWebRTC {
       });
 
     this.client.on("user-published", (user, mediaType) => {
-      this.subscribeRemoteUser(user, mediaType);
+      this.remote_user_published_handler(user, mediaType);
     });
     this.client.on("user-unpublished", (user, mediaType) => {
-      this.remoteUsers[user.uid].processor?.removeRemotePosition();
-      if (mediaType === "video") {
-        this.destroyVideoPlayerContainer(user);
-      }
+      this.remote_user_unpublished_handler(user, mediaType);
     });
 
     AgoraRTC.enableLogUpload();
@@ -182,6 +168,24 @@ export class ServiceWebRTC {
       .length;
   }
 
+  // this updates your local perception of fixed audio sources
+  // but doesn't broadcast your new position to other clients
+  update_self_position_in_extension() {
+    const cam = this.xrs.services.engine.scene.activeCamera;
+    const forward = cam?.getForwardRay(1).direction.asArray() as Array3;
+    const right = cam
+      ?.getDirection(BABYLON.Vector3.Right() as unknown as Vector3)
+      .asArray() as Array3;
+    const position = cam?.position.asArray() as Array3;
+
+    this.spatial_extension.updateSelfPosition(
+      position,
+      forward,
+      right,
+      [0, 1, 0]
+    );
+  }
+
   updateCountAndJoinOrUnjoin() {
     if (this.count_members_connected() >= 2 && this.count_mics_on() >= 1) {
       this.connection_observer.next("be_connected");
@@ -200,28 +204,9 @@ export class ServiceWebRTC {
 
     const sub1 = this.xrs.services.bus.head_movement
       .pipe(throttleTime(100))
-      .subscribe((pos_rot) => {
-        console.log("updating self position in extension");
-        const cam = this.xrs.services.engine.scene.activeCamera;
-        const forward = cam?.getForwardRay(1).direction.asArray();
-
-        const bright = BABYLON.Vector3.Right() as unknown as Vector3;
-
-        const right = cam?.getDirection(bright).asArray();
-        // this updates your local perception of fixed audio sources
-        // but doesn't broadcast your new position to other clients
-        this.spatial_extension.updateSelfPosition(
-          pos_rot.pos as [number, number, number],
-          forward as [number, number, number],
-          right as [number, number, number],
-          [0, 1, 0]
-        );
+      .subscribe(() => {
+        this.update_self_position_in_extension();
       });
-
-    // this.settingData["Peter"].processor.updatePlayerPositionInfo({
-    //   position: [pos.x, pos.y, 1],
-    //   forward: forward,
-    // });
 
     const sub2 = this.xrs.services.bus
       .on_set(["avatar_pose"])
@@ -229,11 +214,7 @@ export class ServiceWebRTC {
         const other_player = this.remoteUsers[cmd.eid];
         if (other_player) {
           other_player.processor?.updatePlayerPositionInfo({
-            position: cmd.set?.avatar_pose?.head?.pos as [
-              number,
-              number,
-              number
-            ],
+            position: cmd.set?.avatar_pose?.head?.pos as Array3,
             forward: [0, 0, 1],
           });
         }
@@ -241,6 +222,9 @@ export class ServiceWebRTC {
 
     this.subscriptions.push(sub1);
     this.subscriptions.push(sub2);
+
+    // in case we don't move our head when we first join
+    this.update_self_position_in_extension();
   }
 
   async leave() {
@@ -279,7 +263,7 @@ export class ServiceWebRTC {
     this.localTracks.audioTrack = null;
   }
 
-  async subscribeRemoteUser(
+  async remote_user_published_handler(
     user: IAgoraRTCRemoteUser,
     mediaType: "audio" | "video"
   ) {
@@ -294,17 +278,29 @@ export class ServiceWebRTC {
       if (mediaType === "audio") {
         const processor = this.spatial_extension.createProcessor();
         user["processor"] = processor;
-        const track = user.audioTrack;
-        track?.pipe(processor).pipe(track.processorDestination);
-        // track?.setVolume(0);
-        track?.play();
+
+        user.audioTrack
+          ?.pipe(processor)
+          .pipe(user.audioTrack?.processorDestination);
+        user.audioTrack?.play();
+
         this.remoteUsers[user.uid] = user;
-        this.remoteUsers[user.uid].track = track;
-        // user.audioTrack?.processorDestination;
-        // user.audioTrack?.play();
       }
     } catch (e) {
       console.error(e);
+    }
+  }
+
+  remote_user_unpublished_handler(
+    user: IAgoraRTCRemoteUser,
+    mediaType: "audio" | "video"
+  ) {
+    if (mediaType === "audio") {
+      this.remoteUsers[user.uid].processor?.removeRemotePosition();
+      delete this.remoteUsers[user.uid];
+    }
+    if (mediaType === "video") {
+      this.destroyVideoPlayerContainer(user);
     }
   }
 

@@ -107,6 +107,10 @@ export class ServiceWebRTC {
     // monitor total connected mics to be efficient with connecting to agora
     // no sense joining if only one person or if everyone is on mute
     this.monitor_mics();
+
+    window.addEventListener("beforeunload", (event) => {
+      this.leave();
+    });
   }
 
   toggle_mic() {

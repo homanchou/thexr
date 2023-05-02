@@ -14,7 +14,15 @@ import type {
   IRemoteAudioTrack,
   IRemoteVideoTrack,
 } from "agora-rtc-sdk-ng";
-import { filter, take, Subject, scan, throttle, throttleTime } from "rxjs";
+import {
+  filter,
+  take,
+  Subject,
+  scan,
+  throttle,
+  throttleTime,
+  Subscription,
+} from "rxjs";
 import type { XRS } from "../xrs";
 import { Vector3 } from "babylonjs";
 
@@ -24,6 +32,7 @@ interface IRemoteUser extends IAgoraRTCRemoteUser {
 }
 
 export class ServiceWebRTC {
+  public subscriptions: Subscription[] = [];
   public name = "webrtc";
   public xrs: XRS;
   public client: IAgoraRTCClient;
@@ -63,7 +72,6 @@ export class ServiceWebRTC {
 
     AgoraRTC.setLogLevel(0);
 
-    // this.spatial_extension = new SpatialAudioExtension();
     this.spatial_extension = new SpatialAudioExtension({
       assetsPath: "/external",
     });
@@ -189,8 +197,9 @@ export class ServiceWebRTC {
       this.options.token,
       this.options.uid
     );
-    this.xrs.services.bus.head_movement
-      .pipe(throttleTime(300))
+
+    const sub1 = this.xrs.services.bus.head_movement
+      .pipe(throttleTime(100))
       .subscribe((pos_rot) => {
         console.log("updating self position in extension");
         const cam = this.xrs.services.engine.scene.activeCamera;
@@ -214,17 +223,30 @@ export class ServiceWebRTC {
     //   forward: forward,
     // });
 
-    this.xrs.services.bus.on_set(["avatar_pose"]).subscribe((cmd) => {
-      const other_player = this.remoteUsers[cmd.eid];
-      if (other_player) {
-        other_player.processor?.updatePlayerPositionInfo({
-          position: cmd.set?.avatar_pose?.head?.pos as [number, number, number],
-          forward: [0, 0, 1],
-        });
-      }
-    });
+    const sub2 = this.xrs.services.bus
+      .on_set(["avatar_pose"])
+      .subscribe((cmd) => {
+        const other_player = this.remoteUsers[cmd.eid];
+        if (other_player) {
+          other_player.processor?.updatePlayerPositionInfo({
+            position: cmd.set?.avatar_pose?.head?.pos as [
+              number,
+              number,
+              number
+            ],
+            forward: [0, 0, 1],
+          });
+        }
+      });
+
+    this.subscriptions.push(sub1);
+    this.subscriptions.push(sub2);
   }
+
   async leave() {
+    this.subscriptions.forEach((sub) => sub.unsubscribe());
+    this.subscriptions.length = 0;
+
     this.localTracks.audioTrack?.stop();
     this.localTracks.audioTrack?.close();
     this.localTracks.videoTrack?.stop();
@@ -237,6 +259,7 @@ export class ServiceWebRTC {
 
     await this.client.leave();
   }
+
   async publishAudio() {
     this.localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack({
       AEC: true,
@@ -245,6 +268,7 @@ export class ServiceWebRTC {
     });
     this.client.publish(this.localTracks.audioTrack);
   }
+
   async unpublishAudio() {
     if (!this.localTracks.audioTrack) {
       return;
@@ -259,9 +283,6 @@ export class ServiceWebRTC {
     user: IAgoraRTCRemoteUser,
     mediaType: "audio" | "video"
   ) {
-    console.log("___________________________");
-    console.log("receiving subscribe remote user");
-    console.log(user.uid);
     // subscribe to a remote user
     try {
       await this.client.subscribe(user, mediaType);

@@ -1,5 +1,10 @@
 /* eslint-disable no-prototype-builtins */
 import AgoraRTC from "agora-rtc-sdk-ng";
+import {
+  SpatialAudioExtension,
+  SpatialAudioProcessor,
+} from "agora-extension-spatial-audio";
+
 import type {
   ConnectionState,
   IAgoraRTCClient,
@@ -9,13 +14,19 @@ import type {
   IRemoteAudioTrack,
   IRemoteVideoTrack,
 } from "agora-rtc-sdk-ng";
-import { filter, take, Subject, scan } from "rxjs";
+import { filter, take, Subject, scan, throttle, throttleTime } from "rxjs";
 import type { XRS } from "../xrs";
+
+interface IRemoteUser extends IAgoraRTCRemoteUser {
+  processor?: SpatialAudioProcessor;
+  track?: IRemoteAudioTrack;
+}
 
 export class ServiceWebRTC {
   public name = "webrtc";
   public xrs: XRS;
   public client: IAgoraRTCClient;
+  public spatial_extension: SpatialAudioExtension;
   public connection_observer = new Subject<
     "be_connected" | "be_disconnected"
   >();
@@ -32,6 +43,7 @@ export class ServiceWebRTC {
     videoTrack: null,
     audioTrack: null,
   };
+  public remoteUsers: { [uid: string]: IRemoteUser } = {};
   // Agora client options
   options: any = {
     appid: null,
@@ -48,7 +60,11 @@ export class ServiceWebRTC {
     // TODO, save this into a user preference, session storage
     this.my_mic_pref = "muted";
 
-    // AgoraRTC.setLogLevel(0);
+    AgoraRTC.setLogLevel(0);
+
+    this.spatial_extension = new SpatialAudioExtension();
+
+    AgoraRTC.registerExtensions([this.spatial_extension]);
     this.client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
     this.client.on("exception", (event) => {
       console.warn(event);
@@ -77,6 +93,7 @@ export class ServiceWebRTC {
       this.subscribeRemoteUser(user, mediaType);
     });
     this.client.on("user-unpublished", (user, mediaType) => {
+      this.remoteUsers[user.uid].processor?.removeRemotePosition();
       if (mediaType === "video") {
         this.destroyVideoPlayerContainer(user);
       }
@@ -168,6 +185,18 @@ export class ServiceWebRTC {
       this.options.token,
       this.options.uid
     );
+    // this.xrs.services.bus.head_movement
+    //   .pipe(throttleTime(500))
+    //   .subscribe((pos_rot) => {
+    //     console.log("updating self position in extension");
+    //     const cam = this.xrs.services.engine.scene.activeCamera;
+    //     this.spatial_extension.updateSelfPosition(
+    //       pos_rot.pos as [number, number, number],
+    //       [0, 0, 1],
+    //       [1, 0, 0],
+    //       [0, 1, 0]
+    //     );
+    //   });
   }
   async leave() {
     this.localTracks.audioTrack?.stop();
@@ -183,7 +212,11 @@ export class ServiceWebRTC {
     await this.client.leave();
   }
   async publishAudio() {
-    this.localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+    this.localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack({
+      AEC: true,
+      AGC: true,
+      ANS: true,
+    });
     this.client.publish(this.localTracks.audioTrack);
   }
   async unpublishAudio() {
@@ -209,7 +242,16 @@ export class ServiceWebRTC {
         user.videoTrack?.play(playerContainer);
       }
       if (mediaType === "audio") {
-        user.audioTrack?.play();
+        const processor = this.spatial_extension.createProcessor();
+        user["processor"] = processor;
+        const track = user.audioTrack;
+        track?.pipe(processor).pipe(track.processorDestination);
+        // track?.setVolume(0);
+        track?.play();
+        this.remoteUsers[user.uid] = user;
+        this.remoteUsers[user.uid].track = track;
+        // user.audioTrack?.processorDestination;
+        // user.audioTrack?.play();
       }
     } catch (e) {
       console.error(e);

@@ -1,6 +1,9 @@
 # Thexr
 
 
+headMovement which is generated data on every frame does truncate, maybe we can throttle so
+we don't produce events on every frame, then also just send in the reference to the original data and let the broker truncate
+
 make all the signals for left and right, be simple primitives so they are easier to
 console log,  move the complex object into caches on the services or systems
 

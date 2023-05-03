@@ -4,7 +4,7 @@ import { XRS } from "../xrs";
 
 import { fromBabylonObservable, truncate } from "../utils/misc";
 import Ammo from "ammojs-typed";
-import { PosRot } from "./bus";
+import { PosRot, ServiceBus } from "./bus";
 
 export class ServiceEngine {
   public canvas: HTMLCanvasElement;
@@ -12,9 +12,11 @@ export class ServiceEngine {
   public xrs: XRS;
   public free_camera: BABYLON.FreeCamera;
   public scene: BABYLON.Scene;
+  public bus: ServiceBus;
 
   init(xrs: XRS) {
     this.xrs = xrs;
+    this.bus = this.xrs.services.bus;
 
     this.create_canvas();
     this.create_scene();
@@ -68,13 +70,7 @@ export class ServiceEngine {
     fromBabylonObservable(
       this.free_camera.onViewMatrixChangedObservable
     ).subscribe((cam) => {
-      this.xrs.services.bus.head_movement.next({
-        pos: cam.position.asArray().map((v) => truncate(v)),
-        rot: cam.absoluteRotation.asArray().map((v) => truncate(v)),
-      });
-      // might want to do something with camera "head" movement
-      // such as detect gestures, stepping over things, trigger other events
-      // notify others etc
+      this.bus.head_movement.next(cam);
     });
   }
 

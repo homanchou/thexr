@@ -44,7 +44,7 @@ export class ServiceBus {
   public incoming_commands = new Subject<Command>();
   public mic_toggled = new Subject<"muted" | "unmuted">();
   public menu_contents_updated = new Subject<any>();
-  public head_movement = new Subject<PosRot>();
+  public head_movement = new Subject<BABYLON.Camera>();
   // left movement, right movement
   public entered_space = new Subject<boolean>();
   // a place to push env variables
@@ -75,8 +75,8 @@ export class ServiceBus {
   }>();
 
   // continuous movements
-  public left_hand_moved = new Subject<PosRot>();
-  public right_hand_moved = new Subject<PosRot>();
+  public left_hand_moved = new Subject<BABYLON.TransformNode>();
+  public right_hand_moved = new Subject<BABYLON.TransformNode>();
 
   public left_trigger = new Subject<xrButtonChanges>();
   public left_squeeze = new Subject<xrButtonChanges>();

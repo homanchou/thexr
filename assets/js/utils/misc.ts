@@ -39,10 +39,13 @@ export function truncate(number, places = 2) {
   return ((number * shift) | 0) / shift;
 }
 
-export const getPosRot = (
-  t: BABYLON.AbstractMesh | undefined,
-  quaternion = true
-) => {
+interface IPosRotable {
+  absolutePosition: BABYLON.Vector3;
+  absoluteRotationQuaternion: BABYLON.Quaternion;
+  rotation: BABYLON.Vector3;
+}
+
+export const getPosRot = (t: IPosRotable | undefined, quaternion = true) => {
   if (!t) {
     return {
       pos: [0, 0, 0],
@@ -102,25 +105,27 @@ export function throttleByMovement() {
   return pipe(
     scan(
       (acc: any, input: PosRot) => {
-        return { prev: acc.curr, curr: input };
+        if (
+          Math.abs(acc.prev.pos[0] - input.pos[0]) > THRESHOLD ||
+          Math.abs(acc.prev.rot[0] - input.rot[0]) > THRESHOLD ||
+          Math.abs(acc.prev.pos[1] - input.pos[1]) > THRESHOLD ||
+          Math.abs(acc.prev.pos[2] - input.pos[2]) > THRESHOLD ||
+          Math.abs(acc.prev.rot[1] - input.rot[1]) > THRESHOLD ||
+          Math.abs(acc.prev.rot[2] - input.rot[2]) > THRESHOLD ||
+          Math.abs(acc.prev.rot[3] - input.rot[3]) > THRESHOLD
+        ) {
+          return { prev: input, met: true };
+        } else {
+          return { prev: acc.prev, met: false };
+        }
       },
       {
-        prev: { pos: [0, 0, 0], rot: [0, 0, 0, 1] },
-        curr: { pos: [0, 0, 0], rot: [0, 0, 0, 1] },
+        prev: { pos: [0.1, 0, 0.1], rot: [0, 0, 0, 1] },
+        met: true,
       }
     ),
-
-    filter(
-      (acc: { prev: PosRot; curr: PosRot }) =>
-        Math.abs(acc.prev.pos[0] - acc.curr.pos[0]) > THRESHOLD ||
-        Math.abs(acc.prev.rot[0] - acc.curr.rot[0]) > THRESHOLD ||
-        Math.abs(acc.prev.pos[1] - acc.curr.pos[1]) > THRESHOLD ||
-        Math.abs(acc.prev.pos[2] - acc.curr.pos[2]) > THRESHOLD ||
-        Math.abs(acc.prev.rot[1] - acc.curr.rot[1]) > THRESHOLD ||
-        Math.abs(acc.prev.rot[2] - acc.curr.rot[2]) > THRESHOLD ||
-        Math.abs(acc.prev.rot[3] - acc.curr.rot[3]) > THRESHOLD
-    ),
-    map((data) => data.curr)
+    filter((payload) => payload.met),
+    map((payload) => payload.prev)
   );
 }
 

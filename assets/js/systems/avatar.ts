@@ -1,8 +1,14 @@
 import { XRS } from "../xrs";
-import { map, mergeWith, throttleTime } from "rxjs/operators";
+import { map, mergeWith, tap, throttleTime } from "rxjs/operators";
 import * as BABYLON from "babylonjs";
 import { PosRot, ServiceBus } from "../services/bus";
-import { setPos, setRot, throttleByMovement } from "../utils/misc";
+import {
+  camPosRot,
+  getPosRot,
+  setPos,
+  setRot,
+  throttleByMovement,
+} from "../utils/misc";
 
 export class SystemAvatar {
   name = "avatar";
@@ -77,6 +83,7 @@ export class SystemAvatar {
 
     const leftMovement$ = this.bus.left_hand_moved.pipe(
       throttleTime(25),
+      map((grip) => getPosRot(grip)),
       throttleByMovement()
     );
 
@@ -86,6 +93,7 @@ export class SystemAvatar {
 
     const rightMovement$ = this.bus.right_hand_moved.pipe(
       throttleTime(25),
+      map((grip) => getPosRot(grip)),
       throttleByMovement()
     );
 
@@ -95,6 +103,7 @@ export class SystemAvatar {
 
     const camMovement$ = this.bus.head_movement.pipe(
       throttleTime(25),
+      map((cam) => camPosRot(cam)),
       throttleByMovement()
     );
 

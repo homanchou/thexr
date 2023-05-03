@@ -56,11 +56,13 @@ defmodule Thexr.Worlds do
 
   """
   def create_space(attrs \\ %{}) do
-    {:ok, space} =
-      %Space{}
-      |> Space.create_changeset(attrs)
-      |> Repo.insert()
+    %Space{}
+    |> Space.create_changeset(attrs)
+    |> Repo.insert()
+    |> create_entities()
+  end
 
+  def create_entities({:ok, space}) do
     # create some basic primitives in the space
     ThexrWeb.Space.GrandSupervisor.start_space(space.id)
     pid = ThexrWeb.Space.Manager.get_pid(space.id)
@@ -135,6 +137,10 @@ defmodule Thexr.Worlds do
     )
 
     {:ok, space}
+  end
+
+  def create_entities(error) do
+    error
   end
 
   @doc """

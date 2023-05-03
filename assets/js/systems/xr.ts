@@ -238,12 +238,12 @@ export class SystemXR {
             inputSource.grip.onAfterWorldMatrixUpdateObservable
           )
             .pipe(takeUntil(this.bus[`${hand}_controller_removed`]))
-            .subscribe(() => {
-              const payload: any = getPosRot(inputSource.grip);
+            .subscribe((grip) => {
+              // const payload: any = getPosRot(inputSource.grip);
               // payload.lv = imposter.getLinearVelocity().asArray();
               // payload.av = imposter.getAngularVelocity().asArray();
 
-              this.bus[`${hand}_hand_moved`].next(payload);
+              this.bus[`${hand}_hand_moved`].next(grip);
             });
         }
       });
@@ -253,7 +253,7 @@ export class SystemXR {
     fromBabylonObservable(
       this.xrHelper.baseExperience.camera.onViewMatrixChangedObservable
     ).subscribe((cam) => {
-      this.bus.head_movement.next(camPosRot(cam));
+      this.bus.head_movement.next(cam);
     });
   }
 

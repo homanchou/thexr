@@ -1,14 +1,14 @@
 <div id="xrs_base" phx-update="ignore" phx-hook="xrs_hook" />
-<.unignorable_modal
+<.confirmation_modal
   :if={!@entered}
   id="welcome_modal"
-  show
+  show={true}
   on_confirm={dispatch_xrs(method: "entered")}
 >
-  <:title><%= @space.name %></:title>
-  <:subtitle><%= @space.description %></:subtitle>
+  <div><%= @space.name %></div>
+  <div><%= @space.description %></div>
   <:confirm>Enter Space</:confirm>
-</.unignorable_modal>
+</.confirmation_modal>
 <%= if @entered do %>
   <.menu menu_state={@menu_state} space={@space} member_id={@member_id} />
 

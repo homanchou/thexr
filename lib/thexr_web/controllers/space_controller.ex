@@ -2,6 +2,8 @@ defmodule ThexrWeb.SpaceController do
   use ThexrWeb, :controller
 
   def show(conn, %{"id" => space_id}) do
+    IO.inspect(conn.assigns, label: "conn assigns")
+
     case Thexr.Worlds.get_space(space_id) do
       nil ->
         conn

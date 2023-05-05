@@ -13,15 +13,14 @@ defmodule ThexrWeb.SpaceLive.FormComponent do
       </.header>
 
       <.simple_form
-        :let={f}
-        for={@changeset}
+        for={@form}
         id="space-form"
         phx-target={@myself}
         phx-change="validate"
         phx-submit="save"
       >
-        <.input field={{f, :name}} type="text" label="name" />
-        <.input field={{f, :description}} type="text" label="description" />
+        <.input field={@form[:name]} type="text" label="Name" />
+        <.input field={@form[:description]} type="text" label="Description" />
         <:actions>
           <.button phx-disable-with="Saving...">Save Space</.button>
         </:actions>
@@ -37,7 +36,7 @@ defmodule ThexrWeb.SpaceLive.FormComponent do
     {:ok,
      socket
      |> assign(assigns)
-     |> assign(:changeset, changeset)}
+     |> assign_form(changeset)}
   end
 
   @impl true
@@ -47,7 +46,7 @@ defmodule ThexrWeb.SpaceLive.FormComponent do
       |> Worlds.change_space(space_params)
       |> Map.put(:action, :validate)
 
-    {:noreply, assign(socket, :changeset, changeset)}
+    {:noreply, assign_form(socket, changeset)}
   end
 
   def handle_event("save", %{"space" => space_params}, socket) do
@@ -56,27 +55,37 @@ defmodule ThexrWeb.SpaceLive.FormComponent do
 
   defp save_space(socket, :edit, space_params) do
     case Worlds.update_space(socket.assigns.space, space_params) do
-      {:ok, _space} ->
+      {:ok, space} ->
+        notify_parent({:saved, space})
+
         {:noreply,
          socket
          |> put_flash(:info, "Space updated successfully")
-         |> push_navigate(to: socket.assigns.navigate)}
+         |> push_patch(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, :changeset, changeset)}
+        {:noreply, assign_form(socket, changeset)}
     end
   end
 
   defp save_space(socket, :new, space_params) do
     case Worlds.create_space(space_params) do
-      {:ok, _space} ->
+      {:ok, space} ->
+        notify_parent({:saved, space})
+
         {:noreply,
          socket
          |> put_flash(:info, "Space created successfully")
-         |> push_navigate(to: socket.assigns.navigate)}
+         |> push_patch(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, changeset: changeset)}
+        {:noreply, assign_form(socket, changeset)}
     end
   end
+
+  defp assign_form(socket, %Ecto.Changeset{} = changeset) do
+    assign(socket, :form, to_form(changeset))
+  end
+
+  defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 end

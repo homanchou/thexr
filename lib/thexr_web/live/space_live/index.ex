@@ -6,7 +6,7 @@ defmodule ThexrWeb.SpaceLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, :spaces, list_spaces())}
+    {:ok, stream(socket, :spaces, Worlds.list_spaces())}
   end
 
   @impl true
@@ -33,14 +33,15 @@ defmodule ThexrWeb.SpaceLive.Index do
   end
 
   @impl true
+  def handle_info({ThexrWeb.SpaceLive.FormComponent, {:saved, space}}, socket) do
+    {:noreply, stream_insert(socket, :spaces, space)}
+  end
+
+  @impl true
   def handle_event("delete", %{"id" => id}, socket) do
     space = Worlds.get_space!(id)
     {:ok, _} = Worlds.delete_space(space)
 
-    {:noreply, assign(socket, :spaces, list_spaces())}
-  end
-
-  defp list_spaces do
-    Worlds.list_spaces()
+    {:noreply, stream_delete(socket, :spaces, space)}
   end
 end

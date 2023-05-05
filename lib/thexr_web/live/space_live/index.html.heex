@@ -7,20 +7,21 @@
   </:actions>
 </.header>
 
-<.table id="spaces" rows={@spaces}>
-  <:col :let={space} label="Name"><%= space.name %></:col>
-  <:col :let={space} label="Description"><%= space.description %></:col>
-  <:action :let={space}>
+<.table id="spaces" rows={@streams.spaces}>
+  <:col :let={{_id, space}} label="Name"><%= space.name %></:col>
+  <:col :let={{_id, space}} label="Description"><%= space.description %></:col>
+  <:action :let={{_id, space}}>
     <.link patch={~p"/spaces/#{space}/edit"}>Edit</.link>
   </:action>
-  <:action :let={space}>
-    <.link phx-click={JS.push("delete", value: %{id: space.id})} data-confirm="Are you sure?">
-      Delete
-    </.link>
+  <:action :let={{_id, space}}>
+    <.link href={~p"/spaces/#{space}"}>Enter</.link>
   </:action>
-  <:action :let={space}>
-    <.link href={~p"/spaces/#{space}"}>
-      Enter
+  <:action :let={{id, space}}>
+    <.link
+      phx-click={JS.push("delete", value: %{id: space.id}) |> hide("##{id}")}
+      data-confirm="Are you sure?"
+    >
+      Delete
     </.link>
   </:action>
 </.table>
@@ -29,7 +30,7 @@
   :if={@live_action in [:new, :edit]}
   id="space-modal"
   show
-  on_cancel={JS.navigate(~p"/spaces")}
+  on_cancel={JS.patch(~p"/spaces")}
 >
   <.live_component
     module={ThexrWeb.SpaceLive.FormComponent}
@@ -37,6 +38,6 @@
     title={@page_title}
     action={@live_action}
     space={@space}
-    navigate={~p"/spaces"}
+    patch={~p"/spaces"}
   />
 </.modal>

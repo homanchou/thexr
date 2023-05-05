@@ -45,8 +45,6 @@ defmodule ThexrWeb.SpaceMenu.Index do
         "unmuted" -> "muted"
       end
 
-    IO.inspect(mic, label: "new value of mic")
-
     {:noreply, assign(socket, mic: mic)}
   end
 

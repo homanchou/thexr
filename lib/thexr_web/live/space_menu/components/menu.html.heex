@@ -7,27 +7,27 @@
       phx-click={
         JS.add_class("z-50", to: "#menu_container")
         |> JS.remove_class("z-0", to: "#menu_container")
-        |> JS.hide(to: "#menu_open_bars")
+        |> JS.hide(to: "#menu_bars")
       }
     >
-      <Heroicons.bars_3 class="h-10 w-10" />
+      <.icon name="hero-bars-3" class="h-10 w-10" />
     </button>
   </div>
 
   <div
     id="menu_container"
-    class="z-0 w-6/12 h-full bg-red-300 absolute bg-opacity-50 border-2 border-red-950"
+    class="z-0 w-6/12 h-full top-0 left-0 bg-red-300 absolute bg-opacity-50 border-2 border-red-950"
   >
     <.button
       id="close_menu"
       class="absolute right-0 top-0"
       phx-click={
         JS.remove_class("z-50", to: "#menu_container")
-        |> JS.add_class("z-0")
-        |> JS.show(to: "#menu_open_bars")
+        |> JS.add_class("z-0", to: "#menu_container")
+        |> JS.show(to: "#menu_bars")
       }
     >
-      <Heroicons.x_mark class="h-6 w-6" />
+      <.icon name="hero-x-mark" class="h-6 w-6" />
     </.button>
 
     <div id="menu_left_right" class="flex w-full h-full">

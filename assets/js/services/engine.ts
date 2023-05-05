@@ -42,12 +42,12 @@ export class ServiceEngine {
     this.canvas.id = this.xrs.config.space_id;
     this.canvas.style.width = "100%";
     this.canvas.style.height = "100%";
-    this.canvas.style.zIndex = "1";
+    this.canvas.style.zIndex = "1"; // don't put this too high, it blocks the VR button
     this.canvas.style.position = "absolute";
     this.canvas.style.touchAction = "none";
     this.canvas.style.outline = "none";
 
-    document.body.append(this.canvas);
+    document.body.prepend(this.canvas);
 
     this.xrs.services.bus.entered_space.subscribe(() => {
       this.canvas.focus();

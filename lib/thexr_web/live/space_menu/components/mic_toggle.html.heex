@@ -2,9 +2,9 @@
   <button class="block p-2 bg-gray-400" phx-click={dispatch_xrs(method: "toggle_mic")}>
     <pre><%= @mic %></pre>
     <%= if @mic == "unmuted" do %>
-      <Heroicons.microphone class="h-10 w-10 fill-green-600" />
+      <.icon name="hero-microphone" class="h-10 w-10 bg-green-600" />
     <% else %>
-      <Heroicons.microphone class="h-10 w-10 fill-red-800" />
+      <.icon name="hero-microphone" class="h-10 w-10 bg-red-800" />
     <% end %>
   </button>
 </div>

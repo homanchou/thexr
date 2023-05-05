@@ -1,12 +1,11 @@
 defmodule Thexr.Accounts.User do
   use Ecto.Schema
   import Ecto.Changeset
-  @primary_key {:id, :binary_id, autogenerate: true}
-  @foreign_key_type :binary_id
+  @primary_key {:id, :string, autogenerate: false}
+  @foreign_key_type :string
   schema "users" do
     field :nickname, :string
     field :email, :string
-    field :member_id, :string
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
     field :confirmed_at, :naive_datetime
@@ -48,6 +47,9 @@ defmodule Thexr.Accounts.User do
   defp validate_nickname(changeset, opts) do
     changeset
     |> validate_required([:nickname])
+    |> validate_format(:nickname, ~r/^[A-Za-z0-9-_]+$/,
+      message: "only letters, numbers, dash and underscore"
+    )
     |> validate_length(:nickname, min: 5)
     |> maybe_validate_unique_nickname(opts)
   end

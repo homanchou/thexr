@@ -77,7 +77,7 @@ defmodule Thexr.Accounts do
   def register_user(attrs) do
     %User{}
     |> User.registration_changeset(attrs)
-    |> Ecto.Changeset.change(member_id: Thexr.Utils.random_string(6))
+    |> Ecto.Changeset.change(id: Thexr.Utils.random_string(6))
     |> Repo.insert()
   end
 

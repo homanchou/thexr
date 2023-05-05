@@ -19,7 +19,7 @@ defmodule Thexr.Accounts.UserToken do
     field :token, :binary
     field :context, :string
     field :sent_to, :string
-    belongs_to :user, Thexr.Accounts.User
+    belongs_to :user, Thexr.Accounts.User, type: :string
 
     timestamps(updated_at: false)
   end

@@ -39,7 +39,7 @@ defmodule ThexrWeb.Router do
     case get_session(conn, :member_id) do
       nil ->
         case conn.assigns.current_user do
-          %Thexr.Accounts.User{member_id: member_id} ->
+          %Thexr.Accounts.User{id: member_id} ->
             conn |> put_session(:member_id, member_id) |> assign(:member_id, member_id)
 
           nil ->

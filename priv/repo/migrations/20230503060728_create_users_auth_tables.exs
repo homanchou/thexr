@@ -5,8 +5,7 @@ defmodule Thexr.Repo.Migrations.CreateUsersAuthTables do
     execute "CREATE EXTENSION IF NOT EXISTS citext", ""
 
     create table(:users, primary_key: false) do
-      add :id, :binary_id, primary_key: true
-      add :member_id, :string, null: false
+      add :id, :string, primary_key: true
       add :nickname, :citext, null: false
       add :email, :citext, null: false
       add :hashed_password, :string, null: false
@@ -16,11 +15,10 @@ defmodule Thexr.Repo.Migrations.CreateUsersAuthTables do
 
     create unique_index(:users, [:email])
     create unique_index(:users, [:nickname])
-    create unique_index(:users, [:member_id])
 
     create table(:users_tokens, primary_key: false) do
       add :id, :binary_id, primary_key: true
-      add :user_id, references(:users, type: :binary_id, on_delete: :delete_all), null: false
+      add :user_id, references(:users, type: :string, on_delete: :delete_all), null: false
       add :token, :binary, null: false
       add :context, :string, null: false
       add :sent_to, :string

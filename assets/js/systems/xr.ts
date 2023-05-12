@@ -109,7 +109,11 @@ export class SystemXR {
     if (!navigator["xr"]) {
       return;
     }
-    this.xrHelper = await this.scene.createDefaultXRExperienceAsync({});
+    this.xrHelper = await this.scene.createDefaultXRExperienceAsync({
+      // inputOptions: {
+      //   doNotLoadControllerMeshes: true,
+      // },
+    });
 
     this.controllerPhysicsFeature = <BABYLON.WebXRControllerPhysics>(
       this.xrHelper.baseExperience.featuresManager.enableFeature(
@@ -126,6 +130,14 @@ export class SystemXR {
         }
       )
     );
+
+    // this.xrHelper.baseExperience.featuresManager.enableFeature(
+    //   BABYLON.WebXRFeatureName.HAND_TRACKING,
+    //   "latest",
+    //   {
+    //     xrInput: this.xrHelper.input,
+    //   }
+    // );
 
     this.teleportation =
       this.xrHelper.baseExperience.featuresManager.enableFeature(
@@ -185,6 +197,11 @@ export class SystemXR {
       inputSource.onMotionControllerInitObservable.add((motionController) => {
         motionController.onModelLoadedObservable.add(() => {
           // cache the input source
+          console.log("a model is still loaded");
+          inputSource.onMeshLoadedObservable.add((mesh) => {
+            console.log("a mesh is still loaded", mesh.name);
+            mesh.getChildMeshes(false).forEach((m) => m.setEnabled(false));
+          });
           this[`_${hand}_input_source`] = inputSource;
           this.bus[`${hand}_controller_added`].next(true);
         });

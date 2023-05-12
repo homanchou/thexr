@@ -1,13 +1,43 @@
 # Thexr
 
-if logged in, use the current users member_id
+A person is represented by: 
+  A simulation of a body.  Something you can see.
+  Something you can interact with (vibrate controllers when you touch)
+  or vibrate your controllers when being touched
 
-Problem with mic "muted" | "unmuted" as a component, is that sending this :set command
-will cause snapshot to save it because snapshot only resists member join, leaves, movements thus far
+  it does not need to be a continous mesh.  
 
--> this idea of members not being part of the snapshot, and membership keeping everything related to members, makes it seems like the command should have a hint that this is a user entity?
+  Mesh
+    Pro:
+    
+    Traditional pipeline
+    can allow users to upload their own meshes
+    look pretty good, especially when textured
+    once you have an animation loaded they deform pretty well
+    gives users a lot of freedom
 
-otherwise we should treat all entities the same....
+    Con:
+
+    The assets are quite large.  It could easily break the platform if allowing people to upload unvetted models and textures.
+
+    Even if you use a controlled custom mesh, varying the morph targets is laborious and still space consuming since you deform the entire face mesh for a few keyposes visemes and emotions.
+
+    Bringing new animations in there is also laborious and hard to do.  You currently need blender and mixamo and the animations are fixed.
+
+    The pipeline is rather restrictive, perhaps it's more fun to do something else like texture map a video for emotions instead of face morphs.
+
+
+  Non-Mesh;
+
+   Instead of deforming a mesh with bones.  Have a body prediction, algorithm that predicts the position of certain land marks.  As these
+   predictions (that make up a pose), (you can even have the name of a clip -> sequence of poses) be the input to an avatar and the engine will render a body matching and animating to the pose.
+
+   saves space by not having customized meshes, but instead scaled limbs like hands, forearms, biceps, torsos, legs, feet.  All wearables are also just interchangable parts, so if wearing pants, just change out the crotch and leg meshes, or decal a shirt on top of a torso.  Much easier to create simple variations without requiring external software.
+
+   There are no deformations, no skeleton and no binding, and no morph targets.  The face will be decals for eyes, mouth, eyebrows.  The arms will have a scripted placement based on hand to shoulder prediction.  The torso might bend but we can just have that be a scripted parameter based on shoulder and predicted hip placement.  Legs can use some hints from full body detection or just be rag doll that users or self can place in the scene, to override prediction.
+
+
+
 
 
 Problem with sequencer and also whiteboard
@@ -31,17 +61,30 @@ Example:
   white board
     -> base is blank white or off white canvas
     -> delta is empty array
-    As people paint brush strokes, we use cmd {eid: "", push: {name: "", value: ""}}
-    When front end receives message it will draw a new stroke.
+    As people paint brush strokes, we use cmd {eid: "white_board", push: {name: "strokes" value: any}}
+    "push" will imply that it's adding a new value into a list on the snapshot, but the message will only contain the new element.
+    
+    in the snapshot:
+
+    id: "white_board", components: %{ "container_name" => [v1, v2, v3...]}
+
+    keeps appending new strokes to the list.
 
     A late comer will get a snapshot that includes all deltas and play all strokes on the empty canvas
 
     The leader will, on the 101th stroke, send a new command: {eid: "", set: {strokes: [], canvas: "base64....." }}, deleting all previous strokes and compressing data to the canvas.
 
-    use pop command to undo
+    idea: use pop command to undo last stroke
 
   sequencer
-    -> base is 2 dimensional array of 40 by 16 zeros.
+    -> base is 2 dimensional array of 40 by 16 zeros.  The sequencer state can get quite big if sending all the state of all the buttons.  Instead you can send the coordinate of the value in the array you want to update.  
+   
+    eid: "sequencer", index_set: { offset: 25, value: any }
+
+    index_set will update an index at the 25th position in the array.  If you have a 2 dimensional array, or x dimensional array you'll need to calculate the offset to update the right position.
+
+    A late comer will get the entire state of the sequencer.  Any existing users will just get the diffs.
+
 
 
   3d painting

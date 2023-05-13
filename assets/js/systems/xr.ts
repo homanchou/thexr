@@ -198,10 +198,12 @@ export class SystemXR {
         motionController.onModelLoadedObservable.add(() => {
           // cache the input source
           console.log("a model is still loaded");
+          // hide default profile mesh
           inputSource.onMeshLoadedObservable.add((mesh) => {
             console.log("a mesh is still loaded", mesh.name);
             mesh.getChildMeshes(false).forEach((m) => m.setEnabled(false));
           });
+
           this[`_${hand}_input_source`] = inputSource;
           this.bus[`${hand}_controller_added`].next(true);
         });

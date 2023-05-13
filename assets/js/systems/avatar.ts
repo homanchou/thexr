@@ -192,7 +192,7 @@ class Avatar {
     }
   }
 
-  createHandIfNotExist(hand: string) {
+  async createHandIfNotExist(hand: string) {
     const transformName = `${this.member_id}_avatar_${hand}_transform`;
     const meshName = `${this.member_id}_avatar_${hand}`;
     let transform = this.scene.getTransformNodeByName(transformName);
@@ -200,12 +200,32 @@ class Avatar {
       transform = new BABYLON.TransformNode(transformName, this.scene);
       transform.rotationQuaternion = new BABYLON.Quaternion();
       this[`${hand}Transform`] = transform;
-      const mesh = BABYLON.MeshBuilder.CreateBox(
-        meshName,
-        { width: 0.053, height: 0.08, depth: 0.1 },
+
+      // load hand tracking model
+      let mesh_url;
+      let mesh_name;
+      if (hand === "left") {
+        mesh_url = "r_hand_rhs.glb";
+        mesh_name = "handMeshRigged_R";
+      } else {
+        mesh_url = "l_hand_rhs.glb";
+        mesh_name = "handMeshRigged_L";
+      }
+
+      await BABYLON.SceneLoader.AppendAsync(
+        "https://assets.babylonjs.com/meshes/HandMeshes/",
+        mesh_url,
         this.scene
       );
 
+      const mesh = this.scene.getMeshByName(mesh_name) as BABYLON.AbstractMesh;
+
+      // const mesh = BABYLON.MeshBuilder.CreateBox(
+      //   meshName,
+      //   { width: 0.053, height: 0.08, depth: 0.1 },
+      //   this.scene
+      // );
+      mesh.rotation.x = BABYLON.Angle.FromDegrees(90).radians();
       mesh.isPickable = false;
       mesh.visibility = 0.5;
       this[`${hand}HandMesh`] = mesh;

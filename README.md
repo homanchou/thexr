@@ -1,5 +1,38 @@
 # Thexr
 
+We do need to "see" each other in VR.
+
+A box for head and hands doesn't cut it.  We want to see a whole body.
+
+The problem is we don't have data for any other part.
+
+We can guess.  Left heel, right heel, right shoulder, left shoulder, left hip, right hip...
+
+Create a list of landmarks with coordinates relative to the coordinates we get from head and hands.
+
+This estimation all happens client-side to reduce the network data being transmitted.  Unless the person is augmenting the data by wearing body pose detection, which can be sent into the space simultaneously.
+
+We can probably achieve something close just with some programatic rules.  The distance of hands to head, distance from all 3 to floor, and tell us weither the hands are outstretched or if we are croutching or laying down.
+
+These rules (MIGHT) improve more, if we had ML learn the function between input of floor, head and hand positions, and output, all the body landmarks.
+
+This estimation has some issues when it is wrong though.  Elbows pointing the wrong way, sliding foundation/feet/seat.  popping/glitching body parts when the estimation of a part doesn't have high confidence.  body intersecting with the floor or couch (estimation not taking env into consideration).
+
+====
+
+what do we want to achieve?  make something special, that VRchat doesn't do?  that is fun and expressive.
+
+make it loose.  Make it graphic.  make it light weight.
+
+paramatizable universal body model?
+animation?
+mesh?
+
+
+
+
+
+
 A person is represented by: 
   A simulation of a body.  Something you can see.
   Something you can interact with (vibrate controllers when you touch)

@@ -1,3 +1,7 @@
+# the snapshotters job is to produce an aggregate of the current state of the space
+# but it only applies to the environment.
+# this way if a new person joins the space, they can get a snapshot of the space
+# from the work that this snapshotter does
 defmodule ThexrWeb.Space.Snapshotter do
   use GenServer
 

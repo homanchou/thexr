@@ -1,3 +1,6 @@
+# the feature supervisor is a dumb supervisor which watches a static list of
+# feature children and restarts them if they die
+
 defmodule ThexrWeb.Space.FeatureSupervisor do
   use Supervisor
 

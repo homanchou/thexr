@@ -1,3 +1,4 @@
+# grandsupervisor supervises all the supervisors of spaces
 defmodule ThexrWeb.Space.GrandSupervisor do
   use DynamicSupervisor
 

@@ -110,9 +110,9 @@ export class SystemXR {
       return;
     }
     this.xrHelper = await this.scene.createDefaultXRExperienceAsync({
-      // inputOptions: {
-      //   doNotLoadControllerMeshes: true,
-      // },
+      inputOptions: {
+        doNotLoadControllerMeshes: true,
+      },
     });
 
     this.controllerPhysicsFeature = <BABYLON.WebXRControllerPhysics>(
@@ -192,9 +192,15 @@ export class SystemXR {
     // trap some signals to help us set and tear down
     xrInput.onControllerAddedObservable.add((inputSource) => {
       const hand = inputSource.inputSource.handedness;
-      console.log("onController added", hand);
+      console.log("onController added", hand, inputSource.grip);
 
+      const grip = this.scene.getMeshByName(inputSource.grip!.name);
+      console.log("the grip", grip);
       inputSource.onMotionControllerInitObservable.add((motionController) => {
+        console.log("in motion contorller init", inputSource.grip);
+        this[`_${hand}_input_source`] = inputSource;
+        this.bus[`${hand}_controller_added`].next(true);
+
         motionController.onModelLoadedObservable.add(() => {
           // cache the input source
           console.log("a model is still loaded");

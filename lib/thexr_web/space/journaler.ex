@@ -1,3 +1,5 @@
+# a journalers job will be to record the history of a space
+# which will be useful for playback
 defmodule ThexrWeb.Space.Journaler do
   use GenServer
 

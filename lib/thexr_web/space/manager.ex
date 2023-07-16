@@ -1,3 +1,6 @@
+# the managers main job is to receive requests for info about the space
+# and also receive updates about a space
+# and dispatch events to the features of the space (subscribers)
 defmodule ThexrWeb.Space.Manager do
   use GenServer, restart: :transient
 
@@ -46,6 +49,8 @@ defmodule ThexrWeb.Space.Manager do
     end
   end
 
+  # allows each feature genserver to save their pid into the manager so manager
+  # can dispatch events to them
   def save_pid(space_id, key, pid) do
     GenServer.cast(via_tuple(:manager, space_id), {:save_pid, key, pid})
   end

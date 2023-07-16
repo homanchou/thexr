@@ -55,6 +55,7 @@ export class SystemAvatar {
       if (cmd.eid !== this.xrs.config.member_id) {
         const avatar = this.avatars[cmd.eid];
         if (avatar) {
+          console.log("pose", cmd.set?.avatar_pose);
           avatar.pose(cmd.set?.avatar_pose);
         }
       }
@@ -332,12 +333,12 @@ class Avatar {
     //   duration: 100,
     // });
 
-    this.bus.animate_rotation.next({
-      target: this.headTransform,
-      from: this.headTransform.rotationQuaternion as BABYLON.Quaternion,
-      to: BABYLON.Quaternion.FromArray(p.head.rot),
-      duration: 100,
-    });
+    // this.bus.animate_rotation.next({
+    //   target: this.headTransform,
+    //   from: this.headTransform.rotationQuaternion as BABYLON.Quaternion,
+    //   to: BABYLON.Quaternion.FromArray(p.head.rot),
+    //   duration: 100,
+    // });
 
     // this.signalHub.service.emit("animate_rotation", {
     //   target: this.headTransform,

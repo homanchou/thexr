@@ -275,6 +275,11 @@ defmodule Thexr.Worlds do
     Repo.delete_all(query)
   end
 
+  # aggreate is a map of multiple members,
+  # play the command into the member to update that members state
+  # and return the entire aggregate
+  # - this is used when you already have the aggregate in a genserver and
+  # want to feed it a new event and update the state, such as in membership genserver
   def update_snapshot(aggregate, commands) when is_map(aggregate) do
     Enum.reduce(commands, aggregate, fn cmd, aggr ->
       eid = cmd["eid"]

@@ -1,3 +1,7 @@
+# a reflectors job is to broadcast incoming events about a space
+# to all the other connected browsers in realtime
+# an optimization is to batch up user movement events and send them all at once
+# on a set timer - this is done in the membership feature
 defmodule ThexrWeb.Space.Reflector do
   use GenServer, restart: :transient
 
@@ -14,7 +18,9 @@ defmodule ThexrWeb.Space.Reflector do
     {:ok, %{space_id: space_id}}
   end
 
-  # optimization, don't reflect every movement event individually
+  # optimization, reflector reflects everything except
+  # movement because there is a ton of them and we
+  # can batch them instead
   def handle_cast({:process_event, %{"set" => %{"avatar_pose" => _}}, _}, state) do
     {:noreply, state}
   end

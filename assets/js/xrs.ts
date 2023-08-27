@@ -85,6 +85,7 @@ export class XRS {
 
     this.systems.forEach((sys) => sys.init(this));
 
+    // draw the initial scene
     for (const [eid, components] of Object.entries(vars.snapshot)) {
       this.handle_command({ eid: eid, set: components });
     }

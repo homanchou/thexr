@@ -213,13 +213,20 @@ class Avatar {
         mesh_name = "handMeshRigged_L";
       }
 
-      await BABYLON.SceneLoader.AppendAsync(
-        "https://assets.babylonjs.com/meshes/HandMeshes/",
-        mesh_url,
-        this.scene
-      );
-
-      const mesh = this.scene.getMeshByName(mesh_name) as BABYLON.AbstractMesh;
+      let mesh = this.scene.getMeshByName(mesh_name);
+      if (mesh) {
+        mesh = mesh.clone(
+          `${mesh_name}-${this.member_id}`,
+          null
+        ) as BABYLON.AbstractMesh;
+      } else {
+        await BABYLON.SceneLoader.AppendAsync(
+          "https://assets.babylonjs.com/meshes/HandMeshes/",
+          mesh_url,
+          this.scene
+        );
+        mesh = this.scene.getMeshByName(mesh_name) as BABYLON.AbstractMesh;
+      }
 
       // const mesh = BABYLON.MeshBuilder.CreateBox(
       //   meshName,
